@@ -48,7 +48,7 @@ export default function Sidebar() {
     <aside className="fixed left-0 top-0 h-full w-56 bg-white border-r border-slate-200 flex flex-col z-10">
       <div className="p-5 border-b border-slate-200">
         <h1 className="text-lg font-bold text-slate-800">
-          ✈️ 신혼여행 플래너
+          📊 운영 대시보드
         </h1>
       </div>
       <nav className="flex-1 py-4">

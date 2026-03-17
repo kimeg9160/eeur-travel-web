@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -29,6 +29,7 @@ interface MapViewProps {
   polyline?: [number, number][];
   height?: string;
   showMyLocation?: boolean;
+  bounds?: [number, number][];
 }
 
 function createIcon(color: string, shape: "circle" | "square" = "circle") {
@@ -52,6 +53,31 @@ const myLocationIcon = L.divIcon({
   iconSize: [20, 20],
   iconAnchor: [10, 10],
 });
+
+function FitBounds({ bounds }: { bounds: [number, number][] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (bounds.length >= 2) {
+      const leafletBounds = L.latLngBounds(bounds.map(([lat, lng]) => L.latLng(lat, lng)));
+      map.fitBounds(leafletBounds, { padding: [40, 40], maxZoom: 15 });
+    } else if (bounds.length === 1) {
+      map.setView(bounds[0], 14);
+    }
+  }, [map, bounds]);
+
+  return null;
+}
+
+function SetView({ center, zoom }: { center: [number, number]; zoom: number }) {
+  const map = useMap();
+
+  useEffect(() => {
+    map.setView(center, zoom);
+  }, [map, center, zoom]);
+
+  return null;
+}
 
 function LocateButton({ onLocate }: { onLocate: (pos: [number, number]) => void }) {
   const map = useMap();
@@ -108,6 +134,7 @@ export default function MapView({
   polyline,
   height = "400px",
   showMyLocation = false,
+  bounds,
 }: MapViewProps) {
   const [myPos, setMyPos] = useState<[number, number] | null>(null);
 
@@ -123,6 +150,7 @@ export default function MapView({
           attribution='&copy; <a href="https://carto.com/">CARTO</a>'
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
         />
+        {bounds ? <FitBounds bounds={bounds} /> : <SetView center={center} zoom={zoom} />}
         {markers.map((m, i) => (
           <Marker key={i} position={m.position} icon={createIcon(m.color || "#3b82f6", m.shape || "circle")}>
             {m.popup && (

@@ -14,13 +14,21 @@ const CAT_COLOR: Record<string, string> = {
   "관광지": "#3b82f6", "식당": "#ef4444", "카페": "#f59e0b", "바/펍": "#8b5cf6", "쇼핑": "#ec4899", "이동": "#6b7280",
 };
 
+const REGIONS = [
+  { id: "hungary", label: "🇭🇺 헝가리", cityNames: ["부다페스트"] },
+  { id: "austria", label: "🇦🇹 오스트리아", cityNames: ["빈", "할슈타트", "잘츠부르크"] },
+  { id: "czech", label: "🇨🇿 체코", cityNames: ["체스키 크룸로프", "프라하"] },
+];
+
 // 각 도시의 주요 기차역 & FlixBus 정류장
 const CITY_LANDMARKS: Record<string, { name: string; position: [number, number]; type: "train" | "bus" }[]> = {
   "Budapest": [
     { name: "Keleti 역 (동역)", position: [47.5003, 19.0839], type: "train" },
     { name: "Nyugati 역 (서역)", position: [47.5098, 19.0556], type: "train" },
     { name: "Déli 역 (남역)", position: [47.4971, 19.0256], type: "train" },
-    { name: "Népliget 버스터미널 (FlixBus)", position: [47.4764, 19.0894], type: "bus" },
+    { name: "Népliget 버스터미널 (FlixBus·시외버스, M3)", position: [47.4764, 19.0894], type: "bus" },
+    { name: "Budapest Keleti (Thököly út)", position: [47.5010, 19.0850], type: "bus" },
+    { name: "Budapest Mexikói út (M1 종점)", position: [47.5175, 19.0985], type: "bus" },
   ],
   "Vienna": [
     { name: "Wien Hbf (중앙역)", position: [48.1853, 16.3764], type: "train" },
@@ -43,11 +51,17 @@ const CITY_LANDMARKS: Record<string, { name: string; position: [number, number];
   ],
 };
 
+const CITY_NAME_MAP: Record<string, string> = {
+  "부다페스트": "Budapest", "빈": "Vienna", "할슈타트": "Hallstatt",
+  "잘츠부르크": "Salzburg", "체스키 크룸로프": "Český Krumlov", "프라하": "Prague",
+};
+
 export default function SchedulePage() {
   const [trip, setTrip] = useState<Trip | null>(null);
   const [cities, setCities] = useState<City[]>([]);
   const [items, setItems] = useState<ItineraryItem[]>([]);
   const [selectedDay, setSelectedDay] = useState(1);
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -73,28 +87,50 @@ export default function SchedulePage() {
   const dayDate = new Date(startDate);
   dayDate.setDate(dayDate.getDate() + selectedDay - 1);
   const dateStr = dayDate.toISOString().split("T")[0];
+  const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+  const dayOfWeek = weekdays[dayDate.getDay()];
 
-  const itineraryMarkers = dayItems
+  // --- 지도 마커 결정 ---
+  const region = REGIONS.find((r) => r.id === selectedRegion);
+  let mapItems: ItineraryItem[];
+  let mapLandmarkKeys: string[];
+
+  if (region) {
+    const regionCityIds = cities
+      .filter((c) => region.cityNames.includes(c.name))
+      .map((c) => c.id);
+    mapItems = items.filter((i) => i.city_id && regionCityIds.includes(i.city_id));
+    mapLandmarkKeys = region.cityNames.map((n) => CITY_NAME_MAP[n] || "").filter(Boolean);
+  } else {
+    mapItems = dayItems;
+    const cityName = city?.name || "";
+    mapLandmarkKeys = [CITY_NAME_MAP[cityName] || ""].filter(Boolean);
+  }
+
+  const itineraryMarkers = mapItems
     .filter((i) => i.latitude && i.longitude)
     .map((i, idx) => ({
       position: [i.latitude!, i.longitude!] as [number, number],
       label: i.spot_name,
-      popup: `<strong>${idx + 1}. ${i.spot_name}</strong><br/>${i.category || ""}${i.time ? " · " + i.time : ""}`,
+      popup: `<strong>${idx + 1}. ${i.spot_name}</strong><br/>${i.category || ""}${i.time ? " · " + i.time : ""}${region ? `<br/>Day ${i.day_number}` : ""}`,
       color: CAT_COLOR[i.category || ""] || "#3b82f6",
     }));
 
-  // 현재 도시의 역/버스터미널 랜드마크 마커
-  const cityName = city?.name || "";
-  const landmarks = Object.entries(CITY_LANDMARKS).find(([key]) => cityName.includes(key))?.[1] || [];
-  const landmarkMarkers = landmarks.map((lm) => ({
-    position: lm.position,
-    label: lm.name,
-    popup: `<strong>${lm.type === "train" ? "🚂" : "🚌"} ${lm.name}</strong>`,
-    color: lm.type === "train" ? "#0d9488" : "#d97706",
-    shape: "square" as const,
-  }));
+  const landmarkMarkers = mapLandmarkKeys.flatMap((key) =>
+    (CITY_LANDMARKS[key] || []).map((lm) => ({
+      position: lm.position,
+      label: lm.name,
+      popup: `<strong>${lm.type === "train" ? "🚂" : "🚌"} ${lm.name}</strong>`,
+      color: lm.type === "train" ? "#0d9488" : "#d97706",
+      shape: "square" as const,
+    }))
+  );
 
   const markers = [...itineraryMarkers, ...landmarkMarkers];
+
+  // bounds: 마커 전체 좌표 → fitBounds 용
+  const allPositions = markers.map((m) => m.position);
+  const useBounds = allPositions.length >= 2;
 
   const center = markers.length
     ? [
@@ -108,13 +144,13 @@ export default function SchedulePage() {
       <h1 className="text-2xl font-bold text-slate-800 mb-4">📅 일정</h1>
 
       {/* Day tabs */}
-      <div className="flex gap-1 mb-6 overflow-x-auto pb-2">
+      <div className="flex gap-1 mb-2 overflow-x-auto pb-2">
         {dayNumbers.map((d) => (
           <button
             key={d}
-            onClick={() => setSelectedDay(d)}
+            onClick={() => { setSelectedDay(d); setSelectedRegion(null); }}
             className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-              selectedDay === d
+              selectedDay === d && !selectedRegion
                 ? "bg-blue-600 text-white"
                 : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
             }`}
@@ -124,10 +160,32 @@ export default function SchedulePage() {
         ))}
       </div>
 
+      {/* Region tabs */}
+      <div className="flex gap-1 mb-6">
+        {REGIONS.map((r) => (
+          <button
+            key={r.id}
+            onClick={() => setSelectedRegion(selectedRegion === r.id ? null : r.id)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              selectedRegion === r.id
+                ? "bg-slate-800 text-white"
+                : "bg-white text-slate-500 border border-slate-200 hover:bg-slate-50"
+            }`}
+          >
+            {r.label}
+          </button>
+        ))}
+        {selectedRegion && (
+          <span className="flex items-center text-xs text-slate-400 ml-2">
+            📍 {region?.label} 전체 ({itineraryMarkers.length}곳)
+          </span>
+        )}
+      </div>
+
       {/* Day header */}
       <div className="mb-4">
         <h2 className="text-xl font-bold text-slate-800">
-          {city?.country_flag} {city?.name || ""} · {dateStr}
+          {city?.country_flag} {city?.name || ""} · {dateStr} ({dayOfWeek})
         </h2>
       </div>
 
@@ -160,8 +218,15 @@ export default function SchedulePage() {
 
         {/* Map */}
         <div className="col-span-2">
-          <MapView center={center} zoom={14} markers={markers} height="500px" showMyLocation />
-          {landmarks.length > 0 && (
+          <MapView
+            center={center}
+            zoom={14}
+            markers={markers}
+            height="500px"
+            showMyLocation
+            bounds={useBounds ? allPositions : undefined}
+          />
+          {landmarkMarkers.length > 0 && (
             <div className="flex gap-4 mt-2 text-xs text-slate-500">
               <span className="flex items-center gap-1">
                 <span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "#0d9488" }} /> 기차역
