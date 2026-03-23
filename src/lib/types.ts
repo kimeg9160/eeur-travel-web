@@ -24,6 +24,8 @@ export interface City {
   latitude: number | null;
   longitude: number | null;
   visit_order: number | null;
+  name_en: string | null;
+  short_code: string | null;
 }
 
 export interface ItineraryItem {
@@ -72,6 +74,8 @@ export interface Accommodation {
   is_booked: number;
   booked_at: string | null;
   created_at: string;
+  checkin_time: string | null;
+  checkout_time: string | null;
 }
 
 export interface Transfer {

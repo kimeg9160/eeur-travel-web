@@ -228,15 +228,74 @@ function buildGoogleMapsUrl(markers: MarkerData[], polyline?: [number, number][]
 }
 
 /* ────── KML 내보내기 (Google My Maps에서 임포트 가능) ────── */
+/* Google My Maps는 Folder = 레이어로 인식. 카테고리별 Folder로 나눠야 마커 구분 가능 */
+const COLOR_TO_CATEGORY: Record<string, string> = {
+  "#3b82f6": "관광지",
+  "#ef4444": "식당",
+  "#f59e0b": "카페",
+  "#ec4899": "쇼핑",
+  "#10b981": "숙소",
+  "#6b7280": "이동",
+  "#0d9488": "기차역",
+  "#d97706": "버스",
+};
+
+/* Google My Maps 아이콘: 카테고리별 모양 + 색상 */
+const CATEGORY_KML: Record<string, { icon: string; color: string }> = {
+  "관광지": { icon: "http://maps.google.com/mapfiles/kml/shapes/museums.png", color: "#3b82f6" },
+  "식당": { icon: "http://maps.google.com/mapfiles/kml/shapes/dining.png", color: "#ef4444" },
+  "카페": { icon: "http://maps.google.com/mapfiles/kml/shapes/snack_bar.png", color: "#f59e0b" },
+  "쇼핑": { icon: "http://maps.google.com/mapfiles/kml/shapes/shopping.png", color: "#ec4899" },
+  "숙소": { icon: "http://maps.google.com/mapfiles/kml/shapes/lodging.png", color: "#10b981" },
+  "이동": { icon: "http://maps.google.com/mapfiles/kml/shapes/trail.png", color: "#6b7280" },
+  "기차역": { icon: "http://maps.google.com/mapfiles/kml/shapes/rail.png", color: "#0d9488" },
+  "버스": { icon: "http://maps.google.com/mapfiles/kml/shapes/bus.png", color: "#d97706" },
+  "기타": { icon: "http://maps.google.com/mapfiles/kml/shapes/info-i.png", color: "#9ca3af" },
+};
+
 function exportKml(markers: MarkerData[], filename = "travel-map") {
-  const placemarks = markers
+  // Group markers by category (color → category name)
+  const grouped: Record<string, MarkerData[]> = {};
+  for (const m of markers) {
+    const cat = COLOR_TO_CATEGORY[m.color || "#3b82f6"] || "기타";
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(m);
+  }
+
+  // Build styles with shape icons + color
+  const styles = Object.keys(grouped)
+    .map((cat) => {
+      const cfg = CATEGORY_KML[cat] || CATEGORY_KML["기타"];
+      const kmlColor = hexToKmlColor(cfg.color);
+      return `    <Style id="style-${escapeXml(cat)}">
+      <IconStyle>
+        <color>${kmlColor}</color>
+        <scale>1.2</scale>
+        <Icon><href>${cfg.icon}</href></Icon>
+      </IconStyle>
+    </Style>`;
+    })
+    .join("\n");
+
+  // Each category becomes a Folder (= layer in Google My Maps)
+  const folders = Object.entries(grouped)
     .map(
-      (m) => `    <Placemark>
-      <name>${escapeXml(m.label)}</name>
-      <description>${escapeXml(m.popup?.replace(/<[^>]*>/g, "") || "")}</description>
-      <Style><IconStyle><color>${hexToKmlColor(m.color || "#3b82f6")}</color><scale>1.0</scale></IconStyle></Style>
-      <Point><coordinates>${m.position[1]},${m.position[0]},0</coordinates></Point>
-    </Placemark>`,
+      ([cat, items]) => {
+        const placemarks = items
+          .map(
+            (m) => `      <Placemark>
+        <name>${escapeXml(m.label)}</name>
+        <description>${escapeXml(m.popup?.replace(/<[^>]*>/g, "") || "")}</description>
+        <styleUrl>#style-${escapeXml(cat)}</styleUrl>
+        <Point><coordinates>${m.position[1]},${m.position[0]},0</coordinates></Point>
+      </Placemark>`
+          )
+          .join("\n");
+        return `    <Folder>
+      <name>${escapeXml(cat)} (${items.length})</name>
+${placemarks}
+    </Folder>`;
+      }
     )
     .join("\n");
 
@@ -244,7 +303,8 @@ function exportKml(markers: MarkerData[], filename = "travel-map") {
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
     <name>${escapeXml(filename)}</name>
-${placemarks}
+${styles}
+${folders}
   </Document>
 </kml>`;
 

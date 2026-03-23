@@ -3,9 +3,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Trip, City, Transfer, Accommodation, BudgetItem } from "@/lib/types";
-import dynamic from "next/dynamic";
-
-const GoogleMapView = dynamic(() => import("@/components/GoogleMapView"), { ssr: false });
 
 export default function HomePage() {
   const [trip, setTrip] = useState<Trip | null>(null);
@@ -53,19 +50,6 @@ export default function HomePage() {
   const totalBudgetKrw = budget.reduce((s, b) => s + (b.cost_krw || 0), 0);
   const fixedBudgetKrw = budget.filter((b) => b.is_fixed).reduce((s, b) => s + (b.cost_krw || 0), 0);
 
-  const cityMarkers = cities
-    .filter((c) => c.latitude && c.longitude)
-    .map((c) => ({
-      position: [c.latitude!, c.longitude!] as [number, number],
-      label: c.name,
-      popup: `<strong>${c.country_flag || ""} ${c.name}</strong><br/>${c.checkin_date} ~ ${c.checkout_date}<br/>${c.nights ?? 0}박`,
-      color: "#3b82f6",
-    }));
-
-  const routePolyline = cities
-    .filter((c) => c.latitude && c.longitude)
-    .map((c) => [c.latitude!, c.longitude!] as [number, number]);
-
   return (
     <div>
       <div className="bg-gradient-to-r from-blue-800 to-blue-500 text-white rounded-xl md:rounded-2xl p-4 md:p-8 mb-4 md:mb-6">
@@ -103,11 +87,6 @@ export default function HomePage() {
             </div>
           </div>
         ))}
-      </div>
-
-      <h2 className="text-base md:text-lg font-bold text-slate-800 mb-2 md:mb-3">전체 경로</h2>
-      <div className="mb-4 md:mb-6">
-        <GoogleMapView center={[48.5, 15.0]} zoom={6} markers={cityMarkers} polyline={routePolyline} height="300px" />
       </div>
 
       <h2 className="text-base md:text-lg font-bold text-slate-800 mb-2 md:mb-3">준비 상태</h2>

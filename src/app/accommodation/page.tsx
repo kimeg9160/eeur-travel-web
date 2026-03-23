@@ -4,11 +4,6 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Trip, City, Accommodation } from "@/lib/types";
 
-const CITY_SHORT: Record<string, string> = {
-  "부다페스트": "BUD", "빈": "VIE", "할슈타트": "HAL",
-  "잘츠부르크": "SZG", "린츠": "LNZ", "체스키 크룸로프": "CK", "프라하": "PRG",
-};
-
 function parseNote(note: string | null) {
   if (!note) return {};
   const result: Record<string, string> = {};
@@ -21,6 +16,15 @@ function parseNote(note: string | null) {
     }
   }
   return result;
+}
+
+function getPdfUrl(info: Record<string, string>) {
+  const bookingId = info["예약번호"];
+  if (!bookingId) return null;
+  const platform = info["플랫폼"];
+  if (platform === "NOL") return `/pdfs/booking_voucher_${bookingId}.pdf`;
+  if (platform === "Agoda") return `/pdfs/Confirmation_for_Booking_ID_%23_${bookingId}.pdf`;
+  return null;
 }
 
 function googleMapsUrl(address: string) {
@@ -36,23 +40,6 @@ function formatDate(dateStr: string | null) {
   const w = weekdays[d.getDay()];
   return `${m}/${day}(${w})`;
 }
-
-const CHECKIN_TIMES: Record<string, string> = {
-  "You Hotel Budapest - Handwritten Collection": "15:00",
-  "Simm's Hotel - cityhotel next to Metro U3": "14:00",
-  "Austria Trend Hotel Europa Salzburg": "14:00",
-  "Leonardo Boutique Hotel Linz City Center": "15:00",
-  "Hotel Dvorak Cesky Krumlov": "15:00",
-  "Ibis Praha Old Town Hotel": "15:00",
-};
-const CHECKOUT_TIMES: Record<string, string> = {
-  "You Hotel Budapest - Handwritten Collection": "11:00",
-  "Simm's Hotel - cityhotel next to Metro U3": "11:00",
-  "Austria Trend Hotel Europa Salzburg": "12:00",
-  "Leonardo Boutique Hotel Linz City Center": "12:00",
-  "Hotel Dvorak Cesky Krumlov": "11:00",
-  "Ibis Praha Old Town Hotel": "12:00",
-};
 
 export default function AccommodationPage() {
   const [trip, setTrip] = useState<Trip | null>(null);
@@ -108,7 +95,7 @@ export default function AccommodationPage() {
             onClick={() => setSelectedCity(c.id)}
             className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium flex-shrink-0 ${selectedCity === c.id ? "bg-blue-600 text-white" : "bg-white text-slate-600 border border-slate-200"}`}
           >
-            <span className="md:hidden">{c.country_flag} {CITY_SHORT[c.name] || c.name}</span>
+            <span className="md:hidden">{c.country_flag} {c.short_code || c.name}</span>
             <span className="hidden md:inline">{c.country_flag} {c.name}</span>
           </button>
         ))}
@@ -120,8 +107,8 @@ export default function AccommodationPage() {
           const city = cityById[acc.city_id ?? 0];
           const info = parseNote(acc.note);
           const tax = parseInt((info["현지세금"] || "0").replace(/[^\d]/g, "")) || 0;
-          const checkinTime = CHECKIN_TIMES[acc.name] || "15:00";
-          const checkoutTime = CHECKOUT_TIMES[acc.name] || "11:00";
+          const checkinTime = acc.checkin_time || "15:00";
+          const checkoutTime = acc.checkout_time || "11:00";
 
           return (
             <div key={acc.id} className="bg-white rounded-xl border border-slate-200 overflow-hidden">
@@ -202,6 +189,37 @@ export default function AccommodationPage() {
                     <span className="text-slate-400">취소: </span>{acc.cancellation_policy}
                   </p>
                 )}
+
+                {/* PDF download */}
+                {(() => {
+                  const pdfUrl = getPdfUrl(info);
+                  return pdfUrl ? (
+                    <div className="flex gap-2 mb-3">
+                      <a
+                        href={pdfUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hidden md:flex items-center justify-center gap-1.5 flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        예약확인서 보기
+                      </a>
+                      <a
+                        href={pdfUrl}
+                        download
+                        className="flex items-center justify-center gap-1.5 flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs md:text-sm font-medium rounded-lg transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        예약확인서 다운로드
+                      </a>
+                    </div>
+                  ) : null;
+                })()}
 
                 {/* Address + Google Maps button */}
                 {acc.address && (

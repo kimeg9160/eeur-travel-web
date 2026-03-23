@@ -9,6 +9,7 @@ import {
   Wallet,
   Hotel,
   Train,
+  Ticket,
   Languages,
   Menu,
   X,
@@ -20,6 +21,7 @@ const MAIN_NAV = [
   { href: "/budget", label: "예산", icon: Wallet },
   { href: "/accommodation", label: "숙소", icon: Hotel },
   { href: "/transportation", label: "교통편", icon: Train },
+  { href: "/attractions", label: "관광지 예약", icon: Ticket },
 ];
 
 const TOOLS_NAV = [

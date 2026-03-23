@@ -2,10 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import type { Trip, BudgetItem } from "@/lib/types";
-import {
-  PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
-} from "recharts";
+import type { Trip, BudgetItem, Accommodation, Transfer } from "@/lib/types";
 
 const CAT_EMOJI: Record<string, string> = {
   "항공": "✈️", "숙소": "🏨", "교통": "🚆", "식비": "🍽️",
@@ -15,7 +12,7 @@ const CAT_COLORS: Record<string, string> = {
   "항공": "#ef4444", "숙소": "#3b82f6", "교통": "#f59e0b", "식비": "#10b981",
   "입장료": "#8b5cf6", "쇼핑": "#ec4899", "보험": "#6366f1", "예비비": "#94a3b8",
 };
-const CATEGORIES = ["항공", "숙소", "교통", "식비", "입장료", "쇼핑", "보험", "예비비"];
+
 
 const DEFAULT_BUDGET = [
   { category: "항공", item_name: "인천-부다페스트 왕복", cost_eur: 0, cost_krw: 1800000 },
@@ -31,14 +28,20 @@ const DEFAULT_BUDGET = [
 export default function BudgetPage() {
   const [trip, setTrip] = useState<Trip | null>(null);
   const [items, setItems] = useState<BudgetItem[]>([]);
+  const [accs, setAccs] = useState<Accommodation[]>([]);
+  const [transfers, setTransfers] = useState<Transfer[]>([]);
 
   const load = useCallback(async () => {
-    const [t, b] = await Promise.all([
+    const [t, b, a, tr] = await Promise.all([
       supabase.from("trips").select("*").eq("id", 1).single(),
       supabase.from("budget").select("*").eq("trip_id", 1).order("category"),
+      supabase.from("accommodations").select("*").eq("trip_id", 1).eq("is_booked", 1),
+      supabase.from("transfers").select("*").eq("trip_id", 1),
     ]);
     if (t.data) setTrip(t.data);
     if (b.data) setItems(b.data);
+    if (a.data) setAccs(a.data);
+    if (tr.data) setTransfers(tr.data);
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -74,18 +77,14 @@ export default function BudgetPage() {
     );
   }
 
+  // 실제 DB 확정 금액
+  const accActualKrw = accs.reduce((s, a) => s + (a.total_price_krw || 0), 0);
+  const transferActualKrw = transfers.reduce((s, t) => s + (t.cost_krw || 0), 0);
+
   const totalKrw = items.reduce((s, b) => s + (b.cost_krw || 0), 0);
   const fixedKrw = items.filter((b) => b.is_fixed).reduce((s, b) => s + (b.cost_krw || 0), 0);
 
-  const grouped = CATEGORIES.map((cat) => {
-    const catItems = items.filter((i) => i.category === cat);
-    const total = catItems.reduce((s, i) => s + (i.cost_krw || 0), 0);
-    const fixed = catItems.filter((i) => i.is_fixed).reduce((s, i) => s + (i.cost_krw || 0), 0);
-    return { category: cat, total, fixed, items: catItems };
-  }).filter((g) => g.total > 0);
 
-  const pieData = grouped.map((g) => ({ name: `${CAT_EMOJI[g.category] || ""} ${g.category}`, value: g.total }));
-  const pieColors = grouped.map((g) => CAT_COLORS[g.category] || "#94a3b8");
 
   return (
     <div>
@@ -107,42 +106,104 @@ export default function BudgetPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6">
-        {/* Pie Chart */}
+        {/* 실제 지출 현황 (도넛) — DB 확정 금액 기반 */}
         <div className="bg-white rounded-xl border border-slate-200 p-3 md:p-5">
-          <h3 className="text-xs md:text-sm font-semibold text-slate-700 mb-2 md:mb-3">카테고리별 비율</h3>
-          <ResponsiveContainer width="100%" height={240}>
-            <PieChart>
-              <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={85} dataKey="value" label={({ name, percent }: { name?: string; percent?: number }) => `${name || ""} ${((percent || 0) * 100).toFixed(0)}%`}>
-                {pieData.map((_, i) => (
-                  <Cell key={i} fill={pieColors[i]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(v) => `₩${Number(v).toLocaleString()}`} />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Progress bars */}
-        <div className="bg-white rounded-xl border border-slate-200 p-3 md:p-5">
-          <h3 className="text-xs md:text-sm font-semibold text-slate-700 mb-2 md:mb-3">확정 진행률</h3>
-          <div className="space-y-3 md:space-y-4">
-            {grouped.map((g) => {
-              const pct = g.total > 0 ? Math.min((g.fixed / g.total) * 100, 100) : 0;
+          <h3 className="text-xs md:text-sm font-semibold text-slate-700 mb-2 md:mb-3">실제 지출 현황</h3>
+          <div className="flex items-center justify-center" style={{ height: 240 }}>
+            {(() => {
+              const segments = [
+                { label: "항공", value: transfers.filter(t => t.transport_type === "비행기").reduce((s, t) => s + (t.cost_krw || 0), 0), color: CAT_COLORS["항공"] },
+                { label: "숙소", value: accActualKrw, color: CAT_COLORS["숙소"] },
+                { label: "교통", value: transfers.filter(t => t.transport_type !== "비행기").reduce((s, t) => s + (t.cost_krw || 0), 0), color: CAT_COLORS["교통"] },
+                { label: "기타 예상", value: Math.max(0, totalKrw - accActualKrw - transferActualKrw), color: "#e2e8f0" },
+              ].filter(s => s.value > 0);
+              const total = segments.reduce((s, seg) => s + seg.value, 0);
+              const confirmedTotal = accActualKrw + transferActualKrw;
+              const size = 200, cx = size / 2, cy = size / 2, r = 75, stroke = 30;
+              let cumAngle = -90;
+              const arcs = segments.map((seg) => {
+                const pct = total > 0 ? seg.value / total : 0;
+                const angle = Math.max(pct * 360, 0.5);
+                const startAngle = cumAngle;
+                cumAngle += angle;
+                const startRad = (startAngle * Math.PI) / 180;
+                const endRad = ((startAngle + angle) * Math.PI) / 180;
+                const largeArc = angle > 180 ? 1 : 0;
+                const x1 = cx + r * Math.cos(startRad), y1 = cy + r * Math.sin(startRad);
+                const x2 = cx + r * Math.cos(endRad), y2 = cy + r * Math.sin(endRad);
+                return { d: `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`, ...seg };
+              });
               return (
-                <div key={g.category}>
-                  <div className="flex justify-between text-xs md:text-sm mb-1">
-                    <span className="font-medium">{CAT_EMOJI[g.category]} {g.category}</span>
-                    <span className="text-slate-500">₩{(g.fixed / 10000).toFixed(0)}만 / ₩{(g.total / 10000).toFixed(0)}만</span>
-                  </div>
-                  <div className="w-full bg-slate-100 rounded-full h-1.5 md:h-2">
-                    <div
-                      className="h-1.5 md:h-2 rounded-full transition-all"
-                      style={{ width: `${pct}%`, backgroundColor: CAT_COLORS[g.category] || "#94a3b8" }}
-                    />
+                <div className="flex items-center gap-4">
+                  <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                    {arcs.map((arc, i) => (
+                      <path key={i} d={arc.d} fill="none" stroke={arc.color} strokeWidth={stroke} strokeLinecap="butt" />
+                    ))}
+                    <text x={cx} y={cy - 6} textAnchor="middle" className="text-lg font-bold fill-slate-800">
+                      {total > 0 ? Math.round((confirmedTotal / total) * 100) : 0}%
+                    </text>
+                    <text x={cx} y={cy + 12} textAnchor="middle" className="text-[10px] fill-slate-400">
+                      확정됨
+                    </text>
+                  </svg>
+                  <div className="space-y-2">
+                    {segments.map((seg) => (
+                      <div key={seg.label} className="text-[11px] md:text-xs">
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: seg.color }} />
+                          <span className="text-slate-600">{seg.label}</span>
+                        </div>
+                        <span className="text-slate-800 font-semibold ml-4">₩{(seg.value / 10000).toFixed(1)}만</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               );
-            })}
+            })()}
+          </div>
+        </div>
+
+        {/* 예약 현황 — 건수 기반 */}
+        <div className="bg-white rounded-xl border border-slate-200 p-3 md:p-5">
+          <h3 className="text-xs md:text-sm font-semibold text-slate-700 mb-2 md:mb-3">예약 현황</h3>
+          <div className="space-y-3 md:space-y-4">
+            {(() => {
+              const bookedAccs = accs.length;
+              const flightBooked = transfers.filter(t => t.transport_type === "비행기" && t.is_booked).length;
+              const flightTotal = transfers.filter(t => t.transport_type === "비행기").length;
+              const landBooked = transfers.filter(t => t.transport_type !== "비행기" && t.is_booked).length;
+              const landTotal = transfers.filter(t => t.transport_type !== "비행기").length;
+
+              const rows = [
+                { icon: "✈️", label: "항공", booked: flightBooked, total: flightTotal, color: CAT_COLORS["항공"] },
+                { icon: "🏨", label: "숙소", booked: bookedAccs, total: bookedAccs, color: CAT_COLORS["숙소"] },
+                { icon: "🚆", label: "도시간 교통", booked: landBooked, total: landTotal, color: CAT_COLORS["교통"] },
+              ];
+              return rows.map((row) => {
+                const pct = row.total > 0 ? Math.min((row.booked / row.total) * 100, 100) : 0;
+                return (
+                  <div key={row.label}>
+                    <div className="flex justify-between text-xs md:text-sm mb-1">
+                      <span className="font-medium">{row.icon} {row.label}</span>
+                      <span className={`font-semibold ${pct === 100 ? "text-green-600" : "text-amber-500"}`}>
+                        {row.booked}/{row.total} {pct === 100 ? "✅" : ""}
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 rounded-full h-1.5 md:h-2">
+                      <div
+                        className="h-1.5 md:h-2 rounded-full transition-all"
+                        style={{ width: `${pct}%`, backgroundColor: pct === 100 ? "#22c55e" : row.color }}
+                      />
+                    </div>
+                    {row.booked < row.total && (
+                      <p className="text-[10px] text-amber-500 mt-0.5">
+                        {row.total - row.booked}건 미예약
+                      </p>
+                    )}
+                  </div>
+                );
+              });
+            })()}
           </div>
         </div>
       </div>

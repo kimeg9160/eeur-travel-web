@@ -1,24 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import type { Trip, City, ItineraryItem } from "@/lib/types";
+import type { Trip, City, ItineraryItem, Accommodation, Transfer } from "@/lib/types";
 import dynamic from "next/dynamic";
 
 const GoogleMapView = dynamic(() => import("@/components/GoogleMapView"), { ssr: false });
+const AddScheduleModal = dynamic(() => import("@/components/AddScheduleModal"), { ssr: false });
 
 const CAT_EMOJI: Record<string, string> = {
-  "관광지": "🏛️", "식당": "🍽️", "카페": "☕", "바/펍": "🍺", "쇼핑": "🛍️", "이동": "🚌",
+  "관광지": "🏛️", "식당": "🍽️", "카페": "☕", "쇼핑": "🛍️", "숙소": "🏨", "이동": "🚌",
 };
 const CAT_COLOR: Record<string, string> = {
-  "관광지": "#3b82f6", "식당": "#ef4444", "카페": "#f59e0b", "바/펍": "#8b5cf6", "쇼핑": "#ec4899", "이동": "#6b7280",
+  "관광지": "#3b82f6", "식당": "#ef4444", "카페": "#f59e0b", "쇼핑": "#ec4899", "숙소": "#10b981", "이동": "#6b7280",
 };
 
-const REGIONS = [
-  { id: "hungary", label: "🇭🇺 HU", labelFull: "🇭🇺 헝가리", cityNames: ["부다페스트"] },
-  { id: "austria", label: "🇦🇹 AT", labelFull: "🇦🇹 오스트리아", cityNames: ["빈", "할슈타트", "잘츠부르크", "린츠"] },
-  { id: "czech", label: "🇨🇿 CZ", labelFull: "🇨🇿 체코", cityNames: ["체스키 크룸로프", "프라하"] },
-];
+const COUNTRY_FLAGS: Record<string, string> = {
+  "헝가리": "🇭🇺", "오스트리아": "🇦🇹", "체코": "🇨🇿",
+};
+const COUNTRY_SHORT: Record<string, string> = {
+  "헝가리": "HU", "오스트리아": "AT", "체코": "CZ",
+};
 
 const CITY_LANDMARKS: Record<string, { name: string; position: [number, number]; type: "train" | "bus" }[]> = {
   "Budapest": [
@@ -53,69 +55,242 @@ const CITY_LANDMARKS: Record<string, { name: string; position: [number, number];
   ],
 };
 
-const CITY_NAME_MAP: Record<string, string> = {
-  "부다페스트": "Budapest", "빈": "Vienna", "할슈타트": "Hallstatt",
-  "잘츠부르크": "Salzburg", "린츠": "Linz", "체스키 크룸로프": "Český Krumlov", "프라하": "Prague",
-};
+/* ── CSV/JSON Import helpers ── */
+function downloadTemplate() {
+  const header = "day_number,spot_name,time,category,memo,cost_krw,cost_eur,latitude,longitude";
+  const example = '3,성 비투스 대성당,09:00,관광지,프라하성 내부,0,0,50.0908,14.4006';
+  const csv = `${header}\n${example}\n`;
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "schedule_template.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function parseCsv(text: string): Partial<ItineraryItem>[] {
+  const lines = text.trim().split("\n");
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(",").map((h) => h.trim());
+  return lines.slice(1).filter((l) => l.trim()).map((line) => {
+    const vals = line.split(",").map((v) => v.trim());
+    const obj: Record<string, string> = {};
+    headers.forEach((h, i) => { obj[h] = vals[i] || ""; });
+    return {
+      day_number: parseInt(obj.day_number) || 1,
+      spot_name: obj.spot_name || "",
+      time: obj.time || null,
+      category: obj.category || "관광지",
+      memo: obj.memo || null,
+      cost_krw: parseFloat(obj.cost_krw) || 0,
+      cost_eur: parseFloat(obj.cost_eur) || 0,
+      latitude: obj.latitude ? parseFloat(obj.latitude) : null,
+      longitude: obj.longitude ? parseFloat(obj.longitude) : null,
+    };
+  }).filter((i) => i.spot_name);
+}
+
+function parseJsonImport(text: string): Partial<ItineraryItem>[] {
+  const data = JSON.parse(text);
+  const arr = Array.isArray(data) ? data : [data];
+  return arr.map((d) => ({
+    day_number: d.day_number || 1,
+    spot_name: d.spot_name || "",
+    time: d.time || null,
+    category: d.category || "관광지",
+    memo: d.memo || null,
+    cost_krw: d.cost_krw || 0,
+    cost_eur: d.cost_eur || 0,
+    latitude: d.latitude ?? null,
+    longitude: d.longitude ?? null,
+  })).filter((i) => i.spot_name);
+}
+
+/* ── Normalize legacy categories ── */
+function normalizeCategory(cat: string | null): string | null {
+  if (cat === "바/펍") return "카페";
+  return cat;
+}
 
 export default function SchedulePage() {
   const [trip, setTrip] = useState<Trip | null>(null);
   const [cities, setCities] = useState<City[]>([]);
   const [items, setItems] = useState<ItineraryItem[]>([]);
+  const [accs, setAccs] = useState<Accommodation[]>([]);
+  const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [selectedDay, setSelectedDay] = useState(1);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    (async () => {
-      const [t, c, i] = await Promise.all([
-        supabase.from("trips").select("*").eq("id", 1).single(),
-        supabase.from("cities").select("*").eq("trip_id", 1).order("visit_order"),
-        supabase.from("itinerary").select("*").eq("trip_id", 1).order("day_number").order("time"),
-      ]);
-      if (t.data) setTrip(t.data);
-      if (c.data) setCities(c.data);
-      if (i.data) setItems(i.data);
-    })();
+  const loadData = useCallback(async () => {
+    const [t, c, i, a, tr] = await Promise.all([
+      supabase.from("trips").select("*").eq("id", 1).single(),
+      supabase.from("cities").select("*").eq("trip_id", 1).order("visit_order"),
+      supabase.from("itinerary").select("*").eq("trip_id", 1).order("day_number").order("time"),
+      supabase.from("accommodations").select("*").eq("trip_id", 1).order("checkin_date"),
+      supabase.from("transfers").select("*").eq("trip_id", 1).order("date"),
+    ]);
+    if (t.data) setTrip(t.data);
+    if (c.data) setCities(c.data);
+    if (i.data) setItems(i.data.map((item) => ({ ...item, category: normalizeCategory(item.category) })));
+    if (a.data) setAccs(a.data);
+    if (tr.data) setTransfers(tr.data);
   }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const handleSaveItem = useCallback(async (item: Partial<ItineraryItem>) => {
+    const { error } = await supabase.from("itinerary").insert(item);
+    if (error) {
+      alert("저장 실패: " + error.message);
+      throw error;
+    }
+    await loadData();
+  }, [loadData]);
+
+  const handleFileImport = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    try {
+      const text = await file.text();
+      let parsed: Partial<ItineraryItem>[];
+      if (file.name.endsWith(".json")) {
+        parsed = parseJsonImport(text);
+      } else {
+        parsed = parseCsv(text);
+      }
+      if (parsed.length === 0) {
+        alert("파싱된 항목이 없습니다.");
+        return;
+      }
+      const dayToCityId: Record<number, number | null> = {};
+      items.forEach((item) => {
+        if (!dayToCityId[item.day_number] && item.city_id) {
+          dayToCityId[item.day_number] = item.city_id;
+        }
+      });
+
+      const toInsert = parsed.map((p) => ({
+        ...p,
+        trip_id: 1,
+        city_id: p.city_id ?? dayToCityId[p.day_number!] ?? null,
+      }));
+
+      const { error } = await supabase.from("itinerary").insert(toInsert);
+      if (error) {
+        alert("Import 실패: " + error.message);
+      } else {
+        alert(`${toInsert.length}건 추가 완료`);
+        await loadData();
+      }
+    } catch (err) {
+      alert("파일 파싱 오류: " + (err as Error).message);
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, [items, loadData]);
 
   if (!trip || !items.length) return <div className="text-slate-400 p-4 md:p-8">로딩 중...</div>;
 
-  const dayNumbers = Array.from(new Set(items.map((i) => i.day_number))).sort((a, b) => a - b);
-  const dayItems = items.filter((i) => i.day_number === selectedDay);
-  const cityById = Object.fromEntries(cities.map((c) => [c.id, c]));
-  const city = dayItems[0]?.city_id ? cityById[dayItems[0].city_id] : null;
+  // Build regions dynamically from cities.country
+  const regionCountries = Array.from(new Set(cities.map((c) => c.country).filter(Boolean))) as string[];
 
+  const dayNumbers = Array.from(new Set(items.map((i) => i.day_number))).sort((a, b) => a - b);
+  const cityById = Object.fromEntries(cities.map((c) => [c.id, c]));
+  // cityNameEnMap: 한글 도시명 → 영문 (DB에서)
+  const cityNameEnMap = Object.fromEntries(cities.filter((c) => c.name_en).map((c) => [c.name, c.name_en!]));
+
+  // Determine what to show based on region or day selection
+  const isRegionMode = !!selectedRegion;
+  let displayItems: ItineraryItem[];
+  let displayAccs: Accommodation[];
+  let mapLandmarkKeys: string[];
+
+  if (isRegionMode) {
+    const regionCityIds = cities
+      .filter((c) => c.country === selectedRegion)
+      .map((c) => c.id);
+    displayItems = items.filter((i) => i.city_id && regionCityIds.includes(i.city_id));
+    displayAccs = accs.filter((a) => a.city_id && regionCityIds.includes(a.city_id));
+    mapLandmarkKeys = cities
+      .filter((c) => c.country === selectedRegion && c.name_en)
+      .map((c) => c.name_en!);
+  } else {
+    displayItems = items.filter((i) => i.day_number === selectedDay);
+    const startDate = new Date(trip.start_date);
+    const dayDate = new Date(startDate);
+    dayDate.setDate(dayDate.getDate() + selectedDay - 1);
+    const dateStr = dayDate.toISOString().split("T")[0];
+    displayAccs = accs.filter((a) => {
+      if (!a.checkin_date || !a.checkout_date) return false;
+      return dateStr >= a.checkin_date && dateStr < a.checkout_date;
+    });
+    const city = displayItems[0]?.city_id ? cityById[displayItems[0].city_id] : null;
+    const cityEn = city?.name_en || cityNameEnMap[city?.name || ""] || "";
+    mapLandmarkKeys = cityEn ? [cityEn] : [];
+  }
+
+  // Day header info
   const startDate = new Date(trip.start_date);
   const dayDate = new Date(startDate);
   dayDate.setDate(dayDate.getDate() + selectedDay - 1);
   const dateStr = dayDate.toISOString().split("T")[0];
   const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
   const dayOfWeek = weekdays[dayDate.getDay()];
+  const dayCity = displayItems[0]?.city_id ? cityById[displayItems[0].city_id] : null;
 
-  const region = REGIONS.find((r) => r.id === selectedRegion);
-  let mapItems: ItineraryItem[];
-  let mapLandmarkKeys: string[];
-
-  if (region) {
-    const regionCityIds = cities
-      .filter((c) => region.cityNames.includes(c.name))
-      .map((c) => c.id);
-    mapItems = items.filter((i) => i.city_id && regionCityIds.includes(i.city_id));
-    mapLandmarkKeys = region.cityNames.map((n) => CITY_NAME_MAP[n] || "").filter(Boolean);
-  } else {
-    mapItems = dayItems;
-    const cityName = city?.name || "";
-    mapLandmarkKeys = [CITY_NAME_MAP[cityName] || ""].filter(Boolean);
-  }
-
-  const itineraryMarkers = mapItems
+  const itineraryMarkers = displayItems
     .filter((i) => i.latitude && i.longitude)
     .map((i, idx) => ({
       position: [i.latitude!, i.longitude!] as [number, number],
       label: i.spot_name,
-      popup: `<strong>${idx + 1}. ${i.spot_name}</strong><br/>${i.category || ""}${i.time ? " · " + i.time : ""}${region ? `<br/>Day ${i.day_number}` : ""}`,
+      popup: `<strong>${idx + 1}. ${i.spot_name}</strong><br/>${i.category || ""}${i.time ? " · " + i.time : ""}${isRegionMode ? `<br/>Day ${i.day_number}` : ""}`,
       color: CAT_COLOR[i.category || ""] || "#3b82f6",
     }));
+
+  const accMarkers = displayAccs
+    .filter((a) => a.latitude && a.longitude)
+    .map((a) => ({
+      position: [a.latitude!, a.longitude!] as [number, number],
+      label: a.name,
+      popup: `<strong>🏨 ${a.name}</strong><br/>숙소`,
+      color: CAT_COLOR["숙소"],
+    }));
+
+  // 해당 날짜의 교통편 매칭
+  const TRANSPORT_EMOJI: Record<string, string> = {
+    "버스": "🚌", "기차": "🚂", "비행기": "✈️", "기타": "🎫",
+  };
+  const formatDuration = (min: string | null) => {
+    const m = parseInt(min || "0");
+    if (!m) return "";
+    const h = Math.floor(m / 60);
+    const r = m % 60;
+    if (h === 0) return `${r}분`;
+    if (r === 0) return `${h}시간`;
+    return `${h}시간 ${r}분`;
+  };
+  const displayTransfers = isRegionMode
+    ? transfers.filter((t) => {
+        const regionCityIds = cities.filter((c) => c.country === selectedRegion).map((c) => c.id);
+        return (t.from_city_id && regionCityIds.includes(t.from_city_id)) ||
+               (t.to_city_id && regionCityIds.includes(t.to_city_id));
+      })
+    : transfers.filter((t) => {
+        // 날짜가 명시된 교통편
+        if (t.date === dateStr) return true;
+        // 도시 checkout 날짜 기반 매칭 (이동일)
+        if (!t.date && t.from_city_id) {
+          const fromCity = cityById[t.from_city_id];
+          if (fromCity?.checkout_date === dateStr) return true;
+        }
+        return false;
+      });
 
   const landmarkMarkers = mapLandmarkKeys.flatMap((key) =>
     (CITY_LANDMARKS[key] || []).map((lm) => ({
@@ -127,7 +302,7 @@ export default function SchedulePage() {
     }))
   );
 
-  const markers = [...itineraryMarkers, ...landmarkMarkers];
+  const markers = [...itineraryMarkers, ...accMarkers, ...landmarkMarkers];
   const allPositions = markers.map((m) => m.position);
   const useBounds = allPositions.length >= 2;
 
@@ -138,9 +313,45 @@ export default function SchedulePage() {
       ] as [number, number]
     : [48.5, 15.0] as [number, number];
 
+  // Group display items by day (for region mode)
+  const itemsByDay: Record<number, ItineraryItem[]> = {};
+  if (isRegionMode) {
+    displayItems.forEach((item) => {
+      if (!itemsByDay[item.day_number]) itemsByDay[item.day_number] = [];
+      itemsByDay[item.day_number].push(item);
+    });
+  }
+
   return (
     <div>
-      <h1 className="text-lg md:text-2xl font-bold text-slate-800 mb-3 md:mb-4">일정</h1>
+      <div className="flex items-center justify-between mb-3 md:mb-4">
+        <h1 className="text-lg md:text-2xl font-bold text-slate-800">일정</h1>
+        <div className="flex gap-1.5">
+          <button
+            onClick={downloadTemplate}
+            className="px-2.5 py-1.5 text-[11px] md:text-xs bg-white border border-slate-200 rounded-lg text-slate-500 hover:bg-slate-50 transition-colors"
+          >
+            CSV 템플릿
+          </button>
+          <label className={`px-2.5 py-1.5 text-[11px] md:text-xs bg-white border border-slate-200 rounded-lg text-slate-500 hover:bg-slate-50 transition-colors cursor-pointer ${importing ? "opacity-50" : ""}`}>
+            {importing ? "가져오는 중..." : "Import"}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,.json"
+              onChange={handleFileImport}
+              className="hidden"
+              disabled={importing}
+            />
+          </label>
+          <button
+            onClick={() => setAddModalOpen(true)}
+            className="px-2.5 py-1.5 text-[11px] md:text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            + 추가
+          </button>
+        </div>
+      </div>
 
       {/* Day tabs */}
       <div className="flex gap-1 mb-2 overflow-x-auto pb-2">
@@ -149,7 +360,7 @@ export default function SchedulePage() {
             key={d}
             onClick={() => { setSelectedDay(d); setSelectedRegion(null); }}
             className={`px-2.5 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium whitespace-nowrap transition-colors ${
-              selectedDay === d && !selectedRegion
+              selectedDay === d && !isRegionMode
                 ? "bg-blue-600 text-white"
                 : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
             }`}
@@ -159,39 +370,45 @@ export default function SchedulePage() {
         ))}
       </div>
 
-      {/* Region tabs */}
+      {/* Region tabs (dynamic from cities.country) */}
       <div className="flex gap-1 mb-4 md:mb-6">
-        {REGIONS.map((r) => (
+        {regionCountries.map((country) => (
           <button
-            key={r.id}
-            onClick={() => setSelectedRegion(selectedRegion === r.id ? null : r.id)}
+            key={country}
+            onClick={() => setSelectedRegion(selectedRegion === country ? null : country)}
             className={`px-2.5 md:px-3 py-1 md:py-1.5 rounded-lg text-[11px] md:text-xs font-medium transition-colors ${
-              selectedRegion === r.id
+              selectedRegion === country
                 ? "bg-slate-800 text-white"
                 : "bg-white text-slate-500 border border-slate-200 hover:bg-slate-50"
             }`}
           >
-            <span className="md:hidden">{r.label}</span>
-            <span className="hidden md:inline">{r.labelFull}</span>
+            <span className="md:hidden">{COUNTRY_SHORT[country] || country}</span>
+            <span className="hidden md:inline">{COUNTRY_FLAGS[country] || ""} {country}</span>
           </button>
         ))}
-        {selectedRegion && (
+        {isRegionMode && (
           <span className="flex items-center text-[10px] md:text-xs text-slate-400 ml-2">
             {itineraryMarkers.length}곳
           </span>
         )}
       </div>
 
-      {/* Day header */}
+      {/* Header */}
       <div className="mb-3 md:mb-4">
-        <h2 className="text-base md:text-xl font-bold text-slate-800">
-          {city?.country_flag} {city?.name || ""} · {dateStr} ({dayOfWeek})
-        </h2>
+        {isRegionMode ? (
+          <h2 className="text-base md:text-xl font-bold text-slate-800">
+            {COUNTRY_FLAGS[selectedRegion!] || ""} {selectedRegion}
+          </h2>
+        ) : (
+          <h2 className="text-base md:text-xl font-bold text-slate-800">
+            {dayCity?.country_flag} {dayCity?.name || ""} · {dateStr} ({dayOfWeek})
+          </h2>
+        )}
       </div>
 
-      {/* Content: stacked on mobile, side-by-side on desktop */}
+      {/* Content */}
       <div className="flex flex-col md:grid md:grid-cols-5 gap-4 md:gap-6">
-        {/* Map first on mobile */}
+        {/* Map */}
         <div className="md:col-span-2 md:order-2">
           <GoogleMapView
             center={center}
@@ -215,30 +432,140 @@ export default function SchedulePage() {
 
         {/* Timeline */}
         <div className="md:col-span-3 md:order-1 space-y-1">
-          {dayItems.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-start gap-2.5 md:gap-4 bg-white rounded-xl p-3 md:p-4 border border-slate-200 hover:border-slate-300 transition-colors"
-            >
-              <div className="text-lg md:text-2xl">{CAT_EMOJI[item.category || ""] || "📍"}</div>
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-slate-800 text-sm md:text-base">{item.spot_name}</div>
-                <div className="text-[10px] md:text-xs text-slate-500 mt-0.5">
-                  {item.category || ""}
-                  {item.time ? ` · ${item.time}` : ""}
-                  {item.duration ? ` · ${item.duration}` : ""}
+          {isRegionMode ? (
+            /* Region mode: group by day */
+            Object.entries(itemsByDay)
+              .sort(([a], [b]) => Number(a) - Number(b))
+              .map(([day, dayItems]) => {
+                const dayCityObj = dayItems[0]?.city_id ? cityById[dayItems[0].city_id] : null;
+                return (
+                  <div key={day}>
+                    <div className="text-xs font-semibold text-slate-500 mt-3 mb-1 first:mt-0">
+                      Day {day} · {dayCityObj?.country_flag} {dayCityObj?.name || ""}
+                    </div>
+                    {dayItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-start gap-2.5 md:gap-4 bg-white rounded-xl p-3 md:p-4 border border-slate-200 hover:border-slate-300 transition-colors mb-1"
+                      >
+                        <div className="text-lg md:text-2xl">{CAT_EMOJI[item.category || ""] || "📍"}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-slate-800 text-sm md:text-base">{item.spot_name}</div>
+                          <div className="text-[10px] md:text-xs text-slate-500 mt-0.5">
+                            {item.category || ""}
+                            {item.time ? ` · ${item.time}` : ""}
+                          </div>
+                          {item.memo && <div className="text-[10px] md:text-xs text-slate-400 mt-0.5 line-clamp-2">{item.memo}</div>}
+                        </div>
+                        {item.cost_krw > 0 && (
+                          <div className="text-xs md:text-sm font-semibold text-blue-600 whitespace-nowrap">
+                            ₩{item.cost_krw.toLocaleString()}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })
+          ) : (
+            /* Day mode */
+            <>
+              {/* Accommodation */}
+              {displayAccs.map((acc) => {
+                const isCheckin = acc.checkin_date === dateStr;
+                return (
+                  <div
+                    key={`acc-${acc.id}`}
+                    className="flex items-start gap-2.5 md:gap-4 bg-emerald-50 rounded-xl p-3 md:p-4 border border-emerald-200"
+                  >
+                    <div className="text-lg md:text-2xl">🏨</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-slate-800 text-sm md:text-base">{acc.name}</div>
+                      <div className="text-[10px] md:text-xs text-slate-500 mt-0.5">
+                        숙소
+                        {isCheckin && ` · 체크인 ${acc.checkin_time || "15:00"} 이후`}
+                        {acc.nights && ` · ${acc.nights}박`}
+                      </div>
+                      {acc.address && (
+                        <div className="text-[10px] md:text-xs text-slate-400 mt-0.5 line-clamp-1">{acc.address}</div>
+                      )}
+                    </div>
+                    {acc.price_per_night_krw && acc.price_per_night_krw > 0 && (
+                      <div className="text-xs md:text-sm font-semibold text-emerald-600 whitespace-nowrap">
+                        ₩{acc.price_per_night_krw.toLocaleString()}/박
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* Transfers */}
+              {displayTransfers.map((t) => {
+                const fromCity = t.from_city_id ? cityById[t.from_city_id] : null;
+                const toCity = t.to_city_id ? cityById[t.to_city_id] : null;
+                const emoji = TRANSPORT_EMOJI[t.transport_type || ""] || "🚗";
+                return (
+                  <div
+                    key={`transfer-${t.id}`}
+                    className="flex items-start gap-2.5 md:gap-4 bg-amber-50 rounded-xl p-3 md:p-4 border border-amber-200"
+                  >
+                    <div className="text-lg md:text-2xl">{emoji}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-slate-800 text-sm md:text-base">
+                        {fromCity?.country_flag || "🇰🇷"} {fromCity?.name || "서울"} → {toCity?.country_flag || "🇰🇷"} {toCity?.name || "서울"}
+                      </div>
+                      <div className="text-[10px] md:text-xs text-slate-500 mt-0.5">
+                        {t.operator || ""}{t.duration ? ` · ${formatDuration(t.duration)}` : ""}
+                        {t.is_booked ? "" : " · ⏳ 미예약"}
+                      </div>
+                      {t.note && <div className="text-[10px] md:text-xs text-slate-400 mt-0.5 line-clamp-2">{t.note}</div>}
+                    </div>
+                    {t.cost_krw > 0 && (
+                      <div className="text-xs md:text-sm font-semibold text-amber-600 whitespace-nowrap">
+                        ₩{t.cost_krw.toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* Itinerary */}
+              {displayItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-start gap-2.5 md:gap-4 bg-white rounded-xl p-3 md:p-4 border border-slate-200 hover:border-slate-300 transition-colors"
+                >
+                  <div className="text-lg md:text-2xl">{CAT_EMOJI[item.category || ""] || "📍"}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-slate-800 text-sm md:text-base">{item.spot_name}</div>
+                    <div className="text-[10px] md:text-xs text-slate-500 mt-0.5">
+                      {item.category || ""}
+                      {item.time ? ` · ${item.time}` : ""}
+                    </div>
+                    {item.memo && <div className="text-[10px] md:text-xs text-slate-400 mt-0.5 line-clamp-2">{item.memo}</div>}
+                  </div>
+                  {item.cost_krw > 0 && (
+                    <div className="text-xs md:text-sm font-semibold text-blue-600 whitespace-nowrap">
+                      ₩{item.cost_krw.toLocaleString()}
+                    </div>
+                  )}
                 </div>
-                {item.memo && <div className="text-[10px] md:text-xs text-slate-400 mt-0.5 line-clamp-2">{item.memo}</div>}
-              </div>
-              {item.cost_krw > 0 && (
-                <div className="text-xs md:text-sm font-semibold text-blue-600 whitespace-nowrap">
-                  ₩{item.cost_krw.toLocaleString()}
-                </div>
-              )}
-            </div>
-          ))}
+              ))}
+            </>
+          )}
         </div>
       </div>
+
+      {/* Add schedule modal */}
+      <AddScheduleModal
+        open={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        onSave={handleSaveItem}
+        tripId={1}
+        dayNumber={selectedDay}
+        cityId={displayItems[0]?.city_id ?? null}
+        defaultCenter={center}
+      />
     </div>
   );
 }
