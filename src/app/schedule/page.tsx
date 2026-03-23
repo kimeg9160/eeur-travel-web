@@ -16,7 +16,7 @@ const CAT_COLOR: Record<string, string> = {
 
 const REGIONS = [
   { id: "hungary", label: "🇭🇺 HU", labelFull: "🇭🇺 헝가리", cityNames: ["부다페스트"] },
-  { id: "austria", label: "🇦🇹 AT", labelFull: "🇦🇹 오스트리아", cityNames: ["빈", "할슈타트", "잘츠부르크"] },
+  { id: "austria", label: "🇦🇹 AT", labelFull: "🇦🇹 오스트리아", cityNames: ["빈", "할슈타트", "잘츠부르크", "린츠"] },
   { id: "czech", label: "🇨🇿 CZ", labelFull: "🇨🇿 체코", cityNames: ["체스키 크룸로프", "프라하"] },
 ];
 
@@ -44,6 +44,9 @@ const CITY_LANDMARKS: Record<string, { name: string; position: [number, number];
   "Český Krumlov": [
     { name: "CK 버스터미널", position: [48.8106, 14.3146], type: "bus" },
   ],
+  "Linz": [
+    { name: "Linz Hbf", position: [48.2904, 14.2918], type: "train" },
+  ],
   "Prague": [
     { name: "Praha hl.n.", position: [50.0833, 14.4347], type: "train" },
     { name: "Florenc (FlixBus)", position: [50.0900, 14.4400], type: "bus" },
@@ -52,7 +55,7 @@ const CITY_LANDMARKS: Record<string, { name: string; position: [number, number];
 
 const CITY_NAME_MAP: Record<string, string> = {
   "부다페스트": "Budapest", "빈": "Vienna", "할슈타트": "Hallstatt",
-  "잘츠부르크": "Salzburg", "체스키 크룸로프": "Český Krumlov", "프라하": "Prague",
+  "잘츠부르크": "Salzburg", "린츠": "Linz", "체스키 크룸로프": "Český Krumlov", "프라하": "Prague",
 };
 
 export default function SchedulePage() {

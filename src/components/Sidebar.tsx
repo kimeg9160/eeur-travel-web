@@ -8,7 +8,6 @@ import {
   Calendar,
   Wallet,
   Hotel,
-  Search,
   Train,
   Languages,
   Menu,
@@ -24,7 +23,6 @@ const MAIN_NAV = [
 ];
 
 const TOOLS_NAV = [
-  { href: "/search", label: "숙소 검색", icon: Search },
   { href: "/translator", label: "번역기", icon: Languages },
 ];
 

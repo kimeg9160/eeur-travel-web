@@ -12,7 +12,7 @@ const TRANSPORT_EMOJI: Record<string, string> = {
 };
 
 const CITY_SHORT: Record<string, string> = {
-  "부다페스트": "BUD", "빈": "VIE", "할슈타트": "HAL",
+  "서울(ICN)": "ICN", "부다페스트": "BUD", "빈": "VIE", "할슈타트": "HAL",
   "잘츠부르크": "SZG", "체스키 크룸로프": "CK", "프라하": "PRG",
 };
 
@@ -50,6 +50,14 @@ export default function TransportationPage() {
 
   const cityById = Object.fromEntries(cities.map((c) => [c.id, c]));
 
+  // ICN(서울)은 DB 도시 목록에 없으므로 from/to가 null일 때 항공편 노트에서 유추
+  const getLabel = (t: Transfer, isFrom: boolean) => {
+    const cityId = isFrom ? t.from_city_id : t.to_city_id;
+    if (cityId && cityById[cityId]) return { name: cityById[cityId].name, flag: cityById[cityId].country_flag || "" };
+    if (t.transport_type === "비행기") return { name: "서울(ICN)", flag: "🇰🇷" };
+    return { name: "?", flag: "" };
+  };
+
   const cityMarkers = cities
     .filter((c) => c.latitude && c.longitude)
     .map((c) => ({
@@ -70,11 +78,11 @@ export default function TransportationPage() {
       {/* Route cards */}
       <div className="space-y-2 md:space-y-3 mb-6 md:mb-8">
         {transfers.map((t) => {
-          const from = cityById[t.from_city_id ?? 0];
-          const to = cityById[t.to_city_id ?? 0];
+          const from = getLabel(t, true);
+          const to = getLabel(t, false);
           const emoji = TRANSPORT_EMOJI[t.transport_type || ""] || "🚗";
-          const fromName = from?.name || "?";
-          const toName = to?.name || "?";
+          const fromName = from.name;
+          const toName = to.name;
 
           return (
             <div key={t.id}>
@@ -86,10 +94,10 @@ export default function TransportationPage() {
                 <div className="flex-1 min-w-0">
                   <div className="font-bold text-slate-800 text-sm md:text-base">
                     <span className="md:hidden">
-                      {from?.country_flag} {CITY_SHORT[fromName] || fromName} → {to?.country_flag} {CITY_SHORT[toName] || toName}
+                      {from.flag} {CITY_SHORT[fromName] || fromName} → {to.flag} {CITY_SHORT[toName] || toName}
                     </span>
                     <span className="hidden md:inline">
-                      {from?.country_flag} {fromName} → {to?.country_flag} {toName}
+                      {from.flag} {fromName} → {to.flag} {toName}
                     </span>
                   </div>
                   <div className="text-[10px] md:text-sm text-slate-500 mt-0.5">
