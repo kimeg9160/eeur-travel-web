@@ -79,10 +79,32 @@ export default function BudgetPage() {
 
   // 실제 DB 확정 금액
   const accActualKrw = accs.reduce((s, a) => s + (a.total_price_krw || 0), 0);
-  const transferActualKrw = transfers.reduce((s, t) => s + (t.cost_krw || 0), 0);
+  const accActualEur = accs.reduce((s, a) => s + (a.total_price_eur || 0), 0);
+  const flightActualKrw = transfers.filter(t => t.transport_type === "비행기").reduce((s, t) => s + (t.cost_krw || 0), 0);
+  const flightActualEur = transfers.filter(t => t.transport_type === "비행기").reduce((s, t) => s + (t.cost_eur || 0), 0);
+  const landActualKrw = transfers.filter(t => t.transport_type !== "비행기").reduce((s, t) => s + (t.cost_krw || 0), 0);
+  const landActualEur = transfers.filter(t => t.transport_type !== "비행기").reduce((s, t) => s + (t.cost_eur || 0), 0);
+  const transferActualKrw = flightActualKrw + landActualKrw;
 
-  const totalKrw = items.reduce((s, b) => s + (b.cost_krw || 0), 0);
-  const fixedKrw = items.filter((b) => b.is_fixed).reduce((s, b) => s + (b.cost_krw || 0), 0);
+  // 항공/숙소/교통 카테고리는 실제 DB 데이터로 자동 동기화
+  const syncMap: Record<string, { krw: number; eur: number }> = {
+    "항공": { krw: flightActualKrw, eur: flightActualEur },
+    "숙소": { krw: accActualKrw, eur: accActualEur },
+    "교통": { krw: landActualKrw, eur: landActualEur },
+  };
+  // 카테고리별 항목 수 — 여러 항목이면 이미 개별 관리 중이므로 동기화 건너뜀
+  const catCount: Record<string, number> = {};
+  items.forEach((item) => { catCount[item.category] = (catCount[item.category] || 0) + 1; });
+  const displayItems = items.map((item) => {
+    const sync = syncMap[item.category];
+    if (sync && (sync.krw > 0 || sync.eur > 0) && (catCount[item.category] || 0) === 1) {
+      return { ...item, cost_krw: sync.krw, cost_eur: sync.eur };
+    }
+    return item;
+  });
+
+  const totalKrw = displayItems.reduce((s, b) => s + (b.cost_krw || 0), 0);
+  const fixedKrw = displayItems.filter((b) => b.is_fixed).reduce((s, b) => s + (b.cost_krw || 0), 0);
 
 
 
@@ -223,9 +245,14 @@ export default function BudgetPage() {
             </tr>
           </thead>
           <tbody>
-            {items.map((item) => (
+            {displayItems.map((item) => (
               <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50">
-                <td className="px-4 py-3">{CAT_EMOJI[item.category] || ""} {item.category}</td>
+                <td className="px-4 py-3">
+                  {CAT_EMOJI[item.category] || ""} {item.category}
+                  {syncMap[item.category] && (syncMap[item.category].krw > 0 || syncMap[item.category].eur > 0) && (catCount[item.category] || 0) === 1 && (
+                    <span className="ml-1 text-[10px] text-blue-500 font-medium">자동</span>
+                  )}
+                </td>
                 <td className="px-4 py-3">{item.item_name}</td>
                 <td className="px-4 py-3 text-right">€{(item.cost_eur || 0).toLocaleString()}</td>
                 <td className="px-4 py-3 text-right font-medium">₩{(item.cost_krw || 0).toLocaleString()}</td>
@@ -251,10 +278,15 @@ export default function BudgetPage() {
 
       {/* Mobile card list */}
       <div className="md:hidden space-y-2">
-        {items.map((item) => (
+        {displayItems.map((item) => (
           <div key={item.id} className="bg-white rounded-xl border border-slate-200 p-3">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-medium text-slate-500">{CAT_EMOJI[item.category] || ""} {item.category}</span>
+              <span className="text-xs font-medium text-slate-500">
+                {CAT_EMOJI[item.category] || ""} {item.category}
+                {syncMap[item.category] && (syncMap[item.category].krw > 0 || syncMap[item.category].eur > 0) && (catCount[item.category] || 0) === 1 && (
+                  <span className="ml-1 text-[10px] text-blue-500 font-medium">자동</span>
+                )}
+              </span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => toggleFixed(item)}

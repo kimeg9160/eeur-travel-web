@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import {
   APIProvider,
   Map,
-  AdvancedMarker,
+  Marker,
   useMapsLibrary,
   useMap,
 } from "@vis.gl/react-google-maps";
@@ -105,6 +105,7 @@ export default function AddScheduleModal({
   const [costEur, setCostEur] = useState(0);
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
+  const [googleMapsUrl, setGoogleMapsUrl] = useState("");
   const [saving, setSaving] = useState(false);
 
   // Reset form when modal opens
@@ -118,6 +119,7 @@ export default function AddScheduleModal({
       setCostEur(0);
       setLat(null);
       setLng(null);
+      setGoogleMapsUrl("");
     }
   }, [open]);
 
@@ -151,6 +153,7 @@ export default function AddScheduleModal({
         cost_eur: costEur,
         latitude: lat,
         longitude: lng,
+        google_maps_url: googleMapsUrl || null,
       });
       onClose();
     } finally {
@@ -200,25 +203,13 @@ export default function AddScheduleModal({
                           : undefined
                       }
                       defaultZoom={12}
-                      mapId="schedule-add-map"
                       style={{ width: "100%", height: "100%" }}
                       gestureHandling="greedy"
                       disableDefaultUI
                     >
                       <MapClickHandler onClick={handleMapClick} />
                       {lat !== null && lng !== null && (
-                        <AdvancedMarker position={{ lat, lng }}>
-                          <div
-                            style={{
-                              width: 16,
-                              height: 16,
-                              borderRadius: "50%",
-                              background: "#3b82f6",
-                              border: "2px solid white",
-                              boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
-                            }}
-                          />
-                        </AdvancedMarker>
+                        <Marker position={{ lat, lng }} />
                       )}
                     </Map>
                   </div>
@@ -321,6 +312,20 @@ export default function AddScheduleModal({
               </button>
             </div>
           )}
+
+          {/* Google Maps URL */}
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1">
+              Google Maps URL
+            </label>
+            <input
+              type="url"
+              value={googleMapsUrl}
+              onChange={(e) => setGoogleMapsUrl(e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="https://maps.app.goo.gl/... (선택)"
+            />
+          </div>
 
           {/* Memo */}
           <div>

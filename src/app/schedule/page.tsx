@@ -57,8 +57,8 @@ const CITY_LANDMARKS: Record<string, { name: string; position: [number, number];
 
 /* ── CSV/JSON Import helpers ── */
 function downloadTemplate() {
-  const header = "day_number,spot_name,time,category,memo,cost_krw,cost_eur,latitude,longitude";
-  const example = '3,성 비투스 대성당,09:00,관광지,프라하성 내부,0,0,50.0908,14.4006';
+  const header = "day_number,spot_name,time,category,memo,cost_krw,cost_eur,latitude,longitude,google_maps_url";
+  const example = '3,성 비투스 대성당,09:00,관광지,프라하성 내부,0,0,50.0908,14.4006,https://maps.app.goo.gl/xxx';
   const csv = `${header}\n${example}\n`;
   const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
@@ -87,6 +87,7 @@ function parseCsv(text: string): Partial<ItineraryItem>[] {
       cost_eur: parseFloat(obj.cost_eur) || 0,
       latitude: obj.latitude ? parseFloat(obj.latitude) : null,
       longitude: obj.longitude ? parseFloat(obj.longitude) : null,
+      google_maps_url: obj.google_maps_url || null,
     };
   }).filter((i) => i.spot_name);
 }
@@ -104,6 +105,7 @@ function parseJsonImport(text: string): Partial<ItineraryItem>[] {
     cost_eur: d.cost_eur || 0,
     latitude: d.latitude ?? null,
     longitude: d.longitude ?? null,
+    google_maps_url: d.google_maps_url || null,
   })).filter((i) => i.spot_name);
 }
 
@@ -261,6 +263,13 @@ export default function SchedulePage() {
       popup: `<strong>🏨 ${a.name}</strong><br/>숙소`,
       color: CAT_COLOR["숙소"],
     }));
+
+  // Google Maps URL: google_maps_url 우선 → 좌표 fallback → 이름 검색
+  const gmapsUrl = (name: string, googleMapsUrl?: string | null, lat?: number | null, lng?: number | null) => {
+    if (googleMapsUrl) return googleMapsUrl;
+    if (lat && lng) return `https://www.google.com/maps?q=${lat},${lng}`;
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`;
+  };
 
   // 해당 날짜의 교통편 매칭
   const TRANSPORT_EMOJI: Record<string, string> = {
@@ -462,6 +471,15 @@ export default function SchedulePage() {
                             ₩{item.cost_krw.toLocaleString()}
                           </div>
                         )}
+                        <a
+                          href={gmapsUrl(item.spot_name, item.google_maps_url, item.latitude, item.longitude)}
+                          target={typeof window !== "undefined" && /Mobi|Android/i.test(navigator.userAgent) ? "_self" : "_blank"}
+                          rel="noopener noreferrer"
+                          className="flex-shrink-0 w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600 transition-colors"
+                          title="Google Maps에서 보기"
+                        >
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                        </a>
                       </div>
                     ))}
                   </div>
@@ -495,6 +513,15 @@ export default function SchedulePage() {
                         ₩{acc.price_per_night_krw.toLocaleString()}/박
                       </div>
                     )}
+                    <a
+                      href={acc.booking_url || gmapsUrl(acc.name, null, acc.latitude, acc.longitude)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-shrink-0 w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-lg bg-emerald-100 hover:bg-blue-100 text-emerald-500 hover:text-blue-600 transition-colors"
+                      title="Google Maps에서 보기"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                    </a>
                   </div>
                 );
               })}
@@ -525,6 +552,17 @@ export default function SchedulePage() {
                         ₩{t.cost_krw.toLocaleString()}
                       </div>
                     )}
+                    {fromCity && toCity && (
+                      <a
+                        href={`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(fromCity.name)}&destination=${encodeURIComponent(toCity.name)}&travelmode=transit`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-shrink-0 w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-lg bg-amber-100 hover:bg-blue-100 text-amber-500 hover:text-blue-600 transition-colors"
+                        title="Google Maps 경로"
+                      >
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                      </a>
+                    )}
                   </div>
                 );
               })}
@@ -549,6 +587,15 @@ export default function SchedulePage() {
                       ₩{item.cost_krw.toLocaleString()}
                     </div>
                   )}
+                  <a
+                    href={gmapsUrl(item.spot_name, item.google_maps_url, item.latitude, item.longitude)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-shrink-0 w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600 transition-colors"
+                    title="Google Maps에서 보기"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                  </a>
                 </div>
               ))}
             </>

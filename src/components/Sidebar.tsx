@@ -11,6 +11,7 @@ import {
   Train,
   Ticket,
   Languages,
+  ClipboardCheck,
   Menu,
   X,
 } from "lucide-react";
@@ -26,6 +27,7 @@ const MAIN_NAV = [
 
 const TOOLS_NAV = [
   { href: "/translator", label: "번역기", icon: Languages },
+  { href: "/checklist", label: "체크리스트", icon: ClipboardCheck },
 ];
 
 export default function Sidebar() {

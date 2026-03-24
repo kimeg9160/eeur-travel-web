@@ -1,0 +1,245 @@
+[
+  {
+    "name": "Wiener Würstl",
+    "rating": "4.2",
+    "lat": 48.2079181,
+    "lng": 16.3711643,
+    "google_maps_url": "https://www.google.com/maps/place/Wiener+W%C3%BCrstl/@47.889243,13.4031498,8z/data=!3m1!5s0x476d0798d59b24bf:0x69bb022dc5ec4fb5!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x476d079ed5471073:0xb9b7a5ba3a41aa8d!8m2!3d48.2079181!4d16.3711643!16s%2Fg%2F11c58wyg19",
+    "memo": "온리캐쉬, 소시지 맛집",
+    "category": "식당"
+  },
+  {
+    "name": "벨베데레 궁전",
+    "rating": "4.7",
+    "lat": 48.1914751,
+    "lng": 16.3809322,
+    "google_maps_url": "https://www.google.com/maps/place/%EB%B2%A8%EB%B2%A0%EB%8D%B0%EB%A0%88+%EA%B6%81%EC%A0%84/@47.889243,13.4031498,8z/data=!3m1!5s0x476d077ce3e5331d:0x75f9613b681cc472!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x476d077d020b9ea5:0x4a65fc52a0937607!8m2!3d48.1914751!4d16.3809322!16zL20vMDM3eWwz",
+    "memo": "26년에 공사한다는 얘기가 있어서 잘 알아보고 가야함.\n클림트 키스 관람 가능",
+    "category": "관광지"
+  },
+  {
+    "name": "모차르트 생가",
+    "rating": "4.3",
+    "lat": 47.8000079,
+    "lng": 13.0435589,
+    "google_maps_url": "https://www.google.com/maps/place/%EB%AA%A8%EC%B0%A8%EB%A5%B4%ED%8A%B8+%EC%83%9D%EA%B0%80/@47.8000079,10.73643,8z/data=!3m1!5s0x47769063ef04192f:0x6a058fcd8f6935e!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x47769063e4398089:0x9e6c5beee63cbf8b!8m2!3d47.8000079!4d13.0435589!16s%2Fm%2F0y4g52m",
+    "memo": "",
+    "category": "관광지"
+  },
+  {
+    "name": "미라벨 정원",
+    "rating": "4.7",
+    "lat": 47.8045848,
+    "lng": 13.0423103,
+    "google_maps_url": "https://www.google.com/maps/place/%EB%AF%B8%EB%9D%BC%EB%B2%A8+%EC%A0%95%EC%9B%90/@47.8045848,10.7351814,8z/data=!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x47769064cc2367c5:0x49f976a9ca845537!8m2!3d47.8045848!4d13.0423103!16s%2Fg%2F11ghrc6xpr",
+    "memo": "",
+    "category": "관광지"
+  },
+  {
+    "name": "레지던스 광장",
+    "rating": "4.6",
+    "lat": 47.7985935,
+    "lng": 13.0466679,
+    "google_maps_url": "https://www.google.com/maps/place/%EB%A0%88%EC%A7%80%EB%8D%98%EC%8A%A4+%EA%B4%91%EC%9E%A5/@47.7985935,10.739539,8z/data=!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x47769061ecb4dfbb:0x6ad591559c0e1eed!8m2!3d47.7985935!4d13.0466679!16s%2Fm%2F05p15l_",
+    "memo": "",
+    "category": "관광지"
+  },
+  {
+    "name": "잘츠부르크 대성당",
+    "rating": "4.7",
+    "lat": 47.7978946,
+    "lng": 13.0466354,
+    "google_maps_url": "https://www.google.com/maps/place/%EC%9E%98%EC%B8%A0%EB%B6%80%EB%A5%B4%ED%81%AC+%EB%8C%80%EC%84%B1%EB%8B%B9/@47.7978946,10.7395065,8z/data=!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x47769061970186b9:0x45bf0d7420b6261d!8m2!3d47.7978946!4d13.0466354!16zL20vMDdyNW1u",
+    "memo": "",
+    "category": "관광지"
+  },
+  {
+    "name": "Getreidegasse",
+    "rating": "4.7",
+    "lat": 47.8000322,
+    "lng": 13.0424271,
+    "google_maps_url": "https://www.google.com/maps/place/Getreidegasse,+5020+Salzburg,+%EC%98%A4%EC%8A%A4%ED%8A%B8%EB%A6%AC%EC%95%84/@47.8000322,10.7352982,8z/data=!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x477690640721cc67:0x9487d7d4873f4dc2!8m2!3d47.8000322!4d13.0424271!16s%2Fm%2F02qhc88",
+    "memo": "",
+    "category": "관광지"
+  },
+  {
+    "name": "호엔 잘츠부르크 성 푸니쿨라 탑승장",
+    "rating": "4.4",
+    "lat": 47.7964598,
+    "lng": 13.0460733,
+    "google_maps_url": "https://www.google.com/maps/place/%ED%98%B8%EC%97%94+%EC%9E%98%EC%B8%A0%EB%B6%80%EB%A5%B4%ED%81%AC+%EC%84%B1+%ED%91%B8%EB%8B%88%EC%BF%A8%EB%9D%BC+%ED%83%91%EC%8A%B9%EC%9E%A5/@47.7964598,10.7389444,8z/data=!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x4776906034403c69:0x24ea8d507aa8f4d9!8m2!3d47.7964598!4d13.0460733!16s%2Fm%2F05zjs5s",
+    "memo": "",
+    "category": "관광지"
+  },
+  {
+    "name": "호엔잘츠부르크 성",
+    "rating": "4.6",
+    "lat": 47.7949483,
+    "lng": 13.0476583,
+    "google_maps_url": "https://www.google.com/maps/place/%ED%98%B8%EC%97%94%EC%9E%98%EC%B8%A0%EB%B6%80%EB%A5%B4%ED%81%AC+%EC%84%B1/@47.7949483,13.0116094,14z/data=!3m1!5s0x4776908abd442ac3:0x9bfd8f1b9908d0fa!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x47769060272103bd:0x2b77bed3e9ec556b!8m2!3d47.7949483!4d13.0476583!16s%2Fm%2F025zzbn",
+    "memo": "",
+    "category": "관광지"
+  },
+  {
+    "name": "DAS SALZKONTOR - Hallstatt Seestrasse",
+    "rating": "3.8",
+    "lat": 47.5611125,
+    "lng": 13.6481787,
+    "google_maps_url": "https://www.google.com/maps/place/DAS+SALZKONTOR+-+Hallstatt+Seestrasse/@47.5611125,11.3410498,8z/data=!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x4771366d7aea9509:0x7487462066e4b6d0!8m2!3d47.5611125!4d13.6481787!16s%2Fg%2F11c1tj_1hv",
+    "memo": "",
+    "category": "쇼핑"
+  },
+  {
+    "name": "할슈타트 관광 안내소",
+    "rating": "4.5",
+    "lat": 47.5612539,
+    "lng": 13.6483699,
+    "google_maps_url": "https://www.google.com/maps/place/%ED%95%A0%EC%8A%88%ED%83%80%ED%8A%B8+%EA%B4%80%EA%B4%91+%EC%95%88%EB%82%B4%EC%86%8C/@47.5612539,11.341241,8z/data=!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x4771366d68706063:0xa4f675c7eaf79b39!8m2!3d47.5612539!4d13.6483699!16s%2Fg%2F12lrlbvlx",
+    "memo": "",
+    "category": "관광지"
+  },
+  {
+    "name": "할슈타트 전망대",
+    "rating": "4.8",
+    "lat": 47.5645953,
+    "lng": 13.6499746,
+    "google_maps_url": "https://www.google.com/maps/place/%ED%95%A0%EC%8A%88%ED%83%80%ED%8A%B8+%EC%A0%84%EB%A7%9D%EB%8C%80/@47.5645953,11.3428457,8z/data=!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x47713612846fe77d:0xde080447d6d64c5d!8m2!3d47.5645953!4d13.6499746!16s%2Fg%2F11b7fy75jx",
+    "memo": "",
+    "category": "관광지"
+  },
+  {
+    "name": "Rührwerk Hallstatt Ofenfrische Schaumrollen",
+    "rating": "4.7",
+    "lat": 47.5609448,
+    "lng": 13.6482808,
+    "google_maps_url": "https://www.google.com/maps/place/R%C3%BChrwerk+Hallstatt+Ofenfrische+Schaumrollen/@47.5609448,11.3411519,8z/data=!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x4771370b26a8b0c9:0x600d2306adadfae7!8m2!3d47.5609448!4d13.6482808!16s%2Fg%2F11h7gh5gqb",
+    "memo": "",
+    "category": "카페"
+  },
+  {
+    "name": "마르크트 광장",
+    "rating": "4.7",
+    "lat": 47.5624068,
+    "lng": 13.6492914,
+    "google_maps_url": "https://www.google.com/maps/place/%EB%A7%88%EB%A5%B4%ED%81%AC%ED%8A%B8+%EA%B4%91%EC%9E%A5/@47.5624068,11.3421625,8z/data=!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x4771366d4dacec2b:0xe569d72cfa05f1ab!8m2!3d47.5624068!4d13.6492914!16s%2Fg%2F11f24x3_t1",
+    "memo": "",
+    "category": "관광지"
+  },
+  {
+    "name": "Klein Steiermark",
+    "rating": "4.2",
+    "lat": 48.1861691,
+    "lng": 16.3864277,
+    "google_maps_url": "https://www.google.com/maps/place/Klein+Steiermark/@47.889243,13.4031498,8z/data=!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x476da9d8bf2e472b:0x4c13d57e385eba9d!8m2!3d48.1861691!4d16.3864277!16s%2Fg%2F1tdl4ykz",
+    "memo": "소금립 맛집",
+    "category": "식당"
+  },
+  {
+    "name": "Schnitzel One",
+    "rating": "4.8",
+    "lat": 48.2054049,
+    "lng": 16.3703764,
+    "google_maps_url": "https://www.google.com/maps/place/Schnitzel+One/@47.889243,13.4031498,8z/data=!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x476d070000ba1c5f:0x5c0e8352c8d69588!8m2!3d48.2054049!4d16.3703764!16s%2Fg%2F11y6gb8v86",
+    "memo": "오이샐러드, 양송이 튀김이 맛있는 슈니첼 맛집",
+    "category": "식당"
+  },
+  {
+    "name": "쇤브룬궁",
+    "rating": "4.7",
+    "lat": 48.1858124,
+    "lng": 16.312764,
+    "google_maps_url": "https://www.google.com/maps/place/%EC%87%A4%EB%B8%8C%EB%A3%AC%EA%B6%81/@47.889243,13.4031498,8z/data=!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x476da8091cc07cbf:0x4e69ba5de4ea8bc9!8m2!3d48.1858124!4d16.312764!16zL20vMDE1X2tx",
+    "memo": "",
+    "category": "관광지"
+  },
+  {
+    "name": "Wiener Wiazhaus",
+    "rating": "4.7",
+    "lat": 48.1967126,
+    "lng": 16.3694477,
+    "google_maps_url": "https://www.google.com/maps/place/Wiener+Wiazhaus/@47.889243,13.4031498,8z/data=!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x476d078238dc7c57:0x40408f5d52dedfff!8m2!3d48.1967126!4d16.3694477!16s%2Fg%2F1tdr22xh",
+    "memo": "슈니첼 맛집",
+    "category": "식당"
+  },
+  {
+    "name": "Restaurant Jonathan & Sieglinde",
+    "rating": "4.6",
+    "lat": 48.2065697,
+    "lng": 16.3760757,
+    "google_maps_url": "https://www.google.com/maps/place/Restaurant+Jonathan+%26+Sieglinde/@47.889243,13.4031498,8z/data=!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x476d079e375c2543:0x7b8cce59d0bfebcc!8m2!3d48.2065697!4d16.3760757!16s%2Fg%2F1thbvgbh",
+    "memo": "슈니첼 맛집",
+    "category": "식당"
+  },
+  {
+    "name": "성 베드로 성당",
+    "rating": "4.7",
+    "lat": 48.209427,
+    "lng": 16.3699436,
+    "google_maps_url": "https://www.google.com/maps/place/%EC%84%B1+%EB%B2%A0%EB%93%9C%EB%A1%9C+%EC%84%B1%EB%8B%B9/@47.889243,13.4031498,8z/data=!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x476d079892b8ee15:0x5f501eacebe95875!8m2!3d48.209427!4d16.3699436!16zL20vMGJ5Z3E0",
+    "memo": "3시 무료 오르간 연주",
+    "category": "관광지"
+  },
+  {
+    "name": "슈테판 대성당",
+    "rating": "4.7",
+    "lat": 48.2084114,
+    "lng": 16.3734707,
+    "google_maps_url": "https://www.google.com/maps/place/%EC%8A%88%ED%85%8C%ED%8C%90+%EB%8C%80%EC%84%B1%EB%8B%B9/@47.889243,13.4031498,8z/data=!3m1!5s0x476d079f9dbbb573:0x1d6dc1f6c15851df!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x476d079f223feccf:0x179757f3fadc3159!8m2!3d48.2084114!4d16.3734707!16zL20vMDFmZG1q",
+    "memo": "",
+    "category": "관광지"
+  },
+  {
+    "name": "프라터",
+    "rating": "4.6",
+    "lat": 48.2154648,
+    "lng": 16.4001739,
+    "google_maps_url": "https://www.google.com/maps/place/%ED%94%84%EB%9D%BC%ED%84%B0/@47.889243,13.4031498,8z/data=!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x476d073f4daba163:0xfce7699ce9a8b1f4!8m2!3d48.2154648!4d16.4001739!16zL20vMDlmdnd5",
+    "memo": "",
+    "category": "관광지"
+  },
+  {
+    "name": "Zum Englischen Reiter",
+    "rating": "4.6",
+    "lat": 48.214667,
+    "lng": 16.400708,
+    "google_maps_url": "https://www.google.com/maps/place/Zum+Englischen+Reiter/@47.889243,13.4031498,8z/data=!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x476d0710f2d966a9:0x5cf5e047c71abd33!8m2!3d48.214667!4d16.400708!16s%2Fg%2F1td_g0z6",
+    "memo": "",
+    "category": "식당"
+  },
+  {
+    "name": "Plachuttas Gasthaus zur Oper",
+    "rating": "4.2",
+    "lat": 48.2035862,
+    "lng": 16.3712255,
+    "google_maps_url": "https://www.google.com/maps/place/Plachuttas+Gasthaus+zur+Oper/@47.889243,13.4031498,8z/data=!3m1!5s0x476d079c459c5d71:0x341d384ca02fd292!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x476d079c45a5e93d:0xfaaa490a4c55c125!8m2!3d48.2035862!4d16.3712255!16s%2Fg%2F1233821nt",
+    "memo": "타펠슈피츠 (소금 갈비탕)",
+    "category": "관광지"
+  },
+  {
+    "name": "비트징거",
+    "rating": "4.1",
+    "lat": 48.2040964,
+    "lng": 16.3685027,
+    "google_maps_url": "https://www.google.com/maps/place/%EB%B9%84%ED%8A%B8%EC%A7%95%EA%B1%B0/@48.2040964,16.3324538,14z/data=!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x476d079b8b7b1441:0x19f957dd80a5703!8m2!3d48.2040964!4d16.3685027!16s%2Fg%2F1ptzmv1nr",
+    "memo": "",
+    "category": "식당"
+  },
+  {
+    "name": "호프부르크 왕궁",
+    "rating": "4.7",
+    "lat": 48.2056578,
+    "lng": 16.3647803,
+    "google_maps_url": "https://www.google.com/maps/place/%ED%98%B8%ED%94%84%EB%B6%80%EB%A5%B4%ED%81%AC+%EC%99%95%EA%B6%81/@47.889243,13.4031498,8z/data=!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x476d0799bf2006df:0x8685168014c4425f!8m2!3d48.2056578!4d16.3647803!16zL20vMDVrc2d6",
+    "memo": "",
+    "category": "관광지"
+  },
+  {
+    "name": "알베르티나",
+    "rating": "4.7",
+    "lat": 48.2046992,
+    "lng": 16.3681824,
+    "google_maps_url": "https://www.google.com/maps/place/%EC%95%8C%EB%B2%A0%EB%A5%B4%ED%8B%B0%EB%82%98/@47.889243,13.4031498,8z/data=!4m10!1m3!11m2!2sdPIbsI_avU1Kx0QlzaOYxgI0Xvbr0A!3e3!3m5!1s0x476d079bf27e5ac1:0x66ef8a989f37deb8!8m2!3d48.2046992!4d16.3681824!16zL20vMDR6Y3Qx",
+    "memo": "비포 선라이즈 배경지 오페라 극장을 배경으로 인증샷",
+    "category": "관광지"
+  }
+]

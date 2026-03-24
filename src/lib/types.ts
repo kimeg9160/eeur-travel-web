@@ -43,6 +43,7 @@ export interface ItineraryItem {
   longitude: number | null;
   cost_eur: number;
   cost_krw: number;
+  google_maps_url: string | null;
 }
 
 export interface Accommodation {
@@ -103,6 +104,16 @@ export interface BudgetItem {
   cost_krw: number;
   is_fixed: number;
   note: string | null;
+}
+
+export interface CheckItem {
+  id: number;
+  trip_id: number;
+  text: string;
+  category: string;
+  is_done: number;
+  sort_order: number;
+  created_at: string;
 }
 
 // Supabase Database type (simplified)

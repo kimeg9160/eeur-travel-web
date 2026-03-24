@@ -3,9 +3,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Trip, City, Transfer } from "@/lib/types";
-import dynamic from "next/dynamic";
-
-const GoogleMapView = dynamic(() => import("@/components/GoogleMapView"), { ssr: false });
 
 const TRANSPORT_EMOJI: Record<string, string> = {
   "버스": "🚌", "기차": "🚂", "비행기": "✈️", "기타": "🎫",
@@ -82,19 +79,6 @@ export default function TransportationPage() {
     return { name: "?", short: "?", flag: "" };
   };
 
-  const cityMarkers = cities
-    .filter((c) => c.latitude && c.longitude)
-    .map((c) => ({
-      position: [c.latitude!, c.longitude!] as [number, number],
-      label: c.name,
-      popup: `<strong>${c.country_flag || ""} ${c.name}</strong>`,
-      color: "#3b82f6",
-    }));
-
-  const routePolyline = cities
-    .filter((c) => c.latitude && c.longitude)
-    .map((c) => [c.latitude!, c.longitude!] as [number, number]);
-
   return (
     <div>
       <h1 className="text-lg md:text-2xl font-bold text-slate-800 mb-4 md:mb-6">교통편</h1>
@@ -136,6 +120,16 @@ export default function TransportationPage() {
                     {t.is_booked ? "✅ 완료" : "⏳ 미예약"}
                   </div>
                 </div>
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(fromName)}&destination=${encodeURIComponent(toName)}&travelmode=transit`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex-shrink-0 w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-600 transition-colors"
+                  title="Google Maps 경로"
+                >
+                  <svg className="w-3.5 h-3.5 md:w-4 md:h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                </a>
                 <button
                   onClick={(e) => { e.stopPropagation(); toggleBooked(t); }}
                   className={`w-6 h-6 md:w-8 md:h-8 rounded-full border-2 flex items-center justify-center text-xs flex-shrink-0 ${
@@ -182,32 +176,6 @@ export default function TransportationPage() {
         })}
       </div>
 
-      {/* Map */}
-      <h2 className="text-base md:text-lg font-bold text-slate-800 mb-2 md:mb-3">경로 지도</h2>
-      <GoogleMapView center={[48.5, 15.0]} zoom={6} markers={cityMarkers} polyline={routePolyline} height="350px" />
-
-      {/* Links */}
-      <h2 className="text-base md:text-lg font-bold text-slate-800 mt-6 md:mt-8 mb-2 md:mb-3">교통편 검색</h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
-        {[
-          { name: "FlixBus", icon: "🚌" },
-          { name: "ÖBB", icon: "🚂", url: "https://www.oebb.at/en/" },
-          { name: "RegioJet", icon: "🚌", url: "https://www.regiojet.com/" },
-          { name: "CK Shuttle", icon: "🚐", url: "https://www.ckshuttle.cz/" },
-          { name: "ČD", icon: "🚂", url: "https://www.cd.cz/en/" },
-          { name: "Rome2Rio", icon: "🗺️", url: "https://www.rome2rio.com/" },
-        ].map((l) => (
-          <a
-            key={l.name}
-            href={l.url || `https://www.flixbus.com/`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-white rounded-xl border border-slate-200 p-3 md:p-4 text-center hover:border-blue-300 hover:bg-blue-50 transition-colors"
-          >
-            <span className="font-medium text-blue-600 text-xs md:text-base">{l.icon} {l.name}</span>
-          </a>
-        ))}
-      </div>
     </div>
   );
 }
