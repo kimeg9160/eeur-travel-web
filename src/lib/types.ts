@@ -44,6 +44,7 @@ export interface ItineraryItem {
   cost_eur: number;
   cost_krw: number;
   google_maps_url: string | null;
+  sort_order: number | null;
 }
 
 export interface Accommodation {
@@ -93,6 +94,8 @@ export interface Transfer {
   booking_url: string | null;
   is_booked: number;
   note: string | null;
+  time: string | null;
+  sort_order: number | null;
 }
 
 export interface BudgetItem {

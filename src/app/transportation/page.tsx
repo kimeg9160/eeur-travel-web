@@ -117,7 +117,7 @@ export default function TransportationPage() {
                   {(t.cost_krw > 0) && <div className="font-semibold text-blue-600 text-sm md:text-base">₩{t.cost_krw.toLocaleString()}</div>}
                   {(t.cost_eur > 0) && <div className="text-[10px] md:text-xs text-slate-500">€{t.cost_eur}</div>}
                   <div className={`text-[10px] md:text-xs font-semibold mt-0.5 md:mt-1 ${t.is_booked ? "text-green-600" : "text-amber-500"}`}>
-                    {t.is_booked ? "✅ 완료" : "⏳ 미예약"}
+                    {t.is_booked ? "✅ 완료" : "🏷️ 현장구매"}
                   </div>
                 </div>
                 <a

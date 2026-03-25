@@ -5,7 +5,6 @@ import {
   APIProvider,
   Map,
   AdvancedMarker,
-  InfoWindow,
   useMap,
 } from "@vis.gl/react-google-maps";
 
@@ -25,6 +24,7 @@ interface GoogleMapViewProps {
   height?: string;
   showMyLocation?: boolean;
   bounds?: [number, number][];
+  highlightedMarkerIndex?: number | null;
 }
 
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
@@ -70,7 +70,7 @@ function FitBoundsController({ bounds }: { bounds: [number, number][] }) {
     if (!map || bounds.length === 0) return;
     if (bounds.length === 1) {
       map.setCenter({ lat: bounds[0][0], lng: bounds[0][1] });
-      map.setZoom(14);
+      map.setZoom(13);
       return;
     }
     const gb = new google.maps.LatLngBounds();
@@ -161,41 +161,86 @@ function MyLocationButton() {
   );
 }
 
-/* ────── Single marker with info window ────── */
-function MarkerWithInfo({ marker }: { marker: MarkerData }) {
-  const [open, setOpen] = useState(false);
+/* ────── Highlight controller: pan + zoom to highlighted marker ────── */
+function HighlightController({
+  markers,
+  highlightedMarkerIndex,
+}: {
+  markers: MarkerData[];
+  highlightedMarkerIndex: number | null | undefined;
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (
+      !map ||
+      highlightedMarkerIndex == null ||
+      highlightedMarkerIndex < 0 ||
+      highlightedMarkerIndex >= markers.length
+    )
+      return;
+
+    const m = markers[highlightedMarkerIndex];
+    map.panTo({ lat: m.position[0], lng: m.position[1] });
+    map.setZoom(14);
+  }, [map, markers, highlightedMarkerIndex]);
+
+  return null;
+}
+
+/* ────── Single marker (highlight only, no popup) ────── */
+function MarkerWithInfo({
+  marker,
+  highlighted = false,
+}: {
+  marker: MarkerData;
+  highlighted?: boolean;
+}) {
   const size = marker.shape === "square" ? 16 : 14;
   const radius = marker.shape === "square" ? "3px" : "50%";
 
   return (
-    <>
-      <AdvancedMarker
-        position={{ lat: marker.position[0], lng: marker.position[1] }}
-        onClick={() => setOpen(!open)}
-        title={marker.label}
-      >
+    <AdvancedMarker
+      position={{ lat: marker.position[0], lng: marker.position[1] }}
+      title={marker.label}
+    >
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+        {/* Label above marker when highlighted */}
+        {highlighted && (
+          <div
+            style={{
+              background: "rgba(30,41,59,0.85)",
+              color: "white",
+              fontSize: 11,
+              fontWeight: 600,
+              padding: "2px 8px",
+              borderRadius: 6,
+              marginBottom: 4,
+              whiteSpace: "nowrap",
+              maxWidth: 160,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {marker.label}
+          </div>
+        )}
         <div
           style={{
             background: marker.color || "#3b82f6",
-            width: size,
-            height: size,
+            width: highlighted ? size + 6 : size,
+            height: highlighted ? size + 6 : size,
             borderRadius: radius,
-            border: "2px solid white",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
+            border: highlighted ? "3px solid #facc15" : "2px solid white",
+            boxShadow: highlighted
+              ? "0 0 8px rgba(250, 204, 21, 0.6), 0 1px 4px rgba(0,0,0,0.3)"
+              : "0 1px 4px rgba(0,0,0,0.3)",
             cursor: "pointer",
+            transition: "all 0.2s ease",
           }}
         />
-      </AdvancedMarker>
-      {open && marker.popup && (
-        <InfoWindow
-          position={{ lat: marker.position[0], lng: marker.position[1] }}
-          onCloseClick={() => setOpen(false)}
-          pixelOffset={[0, -10]}
-        >
-          <div dangerouslySetInnerHTML={{ __html: marker.popup }} />
-        </InfoWindow>
-      )}
-    </>
+      </div>
+    </AdvancedMarker>
   );
 }
 
@@ -339,6 +384,7 @@ export default function GoogleMapView({
   height = "400px",
   showMyLocation = false,
   bounds,
+  highlightedMarkerIndex,
 }: GoogleMapViewProps) {
   const gmapsUrl = buildGoogleMapsUrl(markers, polyline);
 
@@ -371,8 +417,18 @@ export default function GoogleMapView({
             mapTypeControl={false}
           >
             {bounds && bounds.length > 0 && <FitBoundsController bounds={bounds} />}
+            {highlightedMarkerIndex != null && (
+              <HighlightController
+                markers={markers}
+                highlightedMarkerIndex={highlightedMarkerIndex}
+              />
+            )}
             {markers.map((m, i) => (
-              <MarkerWithInfo key={i} marker={m} />
+              <MarkerWithInfo
+                key={i}
+                marker={m}
+                highlighted={highlightedMarkerIndex === i}
+              />
             ))}
             {polyline && polyline.length > 1 && <PolylineLayer path={polyline} />}
           </Map>

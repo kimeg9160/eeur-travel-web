@@ -130,7 +130,7 @@ export default function AttractionsPage() {
                         </div>
                       </div>
                       <span className={`text-[10px] md:text-xs font-semibold flex-shrink-0 ${item.isBooked ? "text-green-600" : "text-amber-500"}`}>
-                        {item.isBooked ? "✅ 완료" : "⏳ 미예약"}
+                        {item.isBooked ? "✅ 완료" : "🏷️ 현장구매"}
                       </span>
                     </div>
 

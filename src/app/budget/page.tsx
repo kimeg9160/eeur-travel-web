@@ -219,7 +219,7 @@ export default function BudgetPage() {
                     </div>
                     {row.booked < row.total && (
                       <p className="text-[10px] text-amber-500 mt-0.5">
-                        {row.total - row.booked}건 미예약
+                        {row.total - row.booked}건 현장구매
                       </p>
                     )}
                   </div>
