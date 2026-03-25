@@ -53,7 +53,11 @@ export default function ChecklistPage() {
     load();
   };
 
-  if (loading) return <div className="text-slate-400 p-4 md:p-8">로딩 중...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-500 rounded-full animate-spin" />
+    </div>
+  );
 
   const grouped = CATEGORIES.map((cat) => ({
     category: cat,
@@ -70,32 +74,32 @@ export default function ChecklistPage() {
   const progress = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-bold text-slate-800">체크리스트</h2>
+    <div className="space-y-4">
+      <h1 className="text-xl md:text-2xl font-bold text-slate-800">체크리스트</h1>
 
       {/* 진행률 */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-slate-600">
+      <div className="card p-5">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-sm font-semibold text-slate-600">
             준비 진행률: {doneCount}/{totalCount}
           </span>
-          <span className="text-sm font-bold text-blue-600">{progress}%</span>
+          <span className="text-sm font-bold bg-gradient-to-r from-indigo-500 to-blue-500 bg-clip-text text-transparent">{progress}%</span>
         </div>
-        <div className="w-full bg-slate-100 rounded-full h-3">
+        <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
           <div
-            className="bg-blue-600 h-3 rounded-full transition-all duration-300"
+            className="bg-gradient-to-r from-indigo-500 to-blue-500 h-2.5 rounded-full transition-all duration-500"
             style={{ width: `${progress}%` }}
           />
         </div>
       </div>
 
       {/* 항목 추가 */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4">
+      <div className="card p-4">
         <div className="flex gap-2 flex-wrap">
           <select
             value={newCategory}
             onChange={(e) => setNewCategory(e.target.value)}
-            className="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white"
+            className="px-3 py-2.5 bg-slate-50 rounded-xl text-sm border-0 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
           >
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>{c}</option>
@@ -107,11 +111,11 @@ export default function ChecklistPage() {
             onChange={(e) => setNewText(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && addItem()}
             placeholder="새 항목 입력..."
-            className="flex-1 min-w-[200px] px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 min-w-[200px] px-3 py-2.5 bg-slate-50 rounded-xl text-sm border-0 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
           />
           <button
             onClick={addItem}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-1"
+            className="px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-blue-500 text-white rounded-xl text-sm font-semibold hover:shadow-lg hover:shadow-indigo-500/20 transition-all flex items-center gap-1.5"
           >
             <Plus size={16} />
             추가
@@ -120,16 +124,16 @@ export default function ChecklistPage() {
       </div>
 
       {/* 체크리스트 */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         {grouped.map((group) => (
           <div
             key={group.category}
-            className="bg-white rounded-xl border border-slate-200 overflow-hidden"
+            className="card overflow-hidden"
           >
-            <div className="px-5 py-3 bg-slate-50 border-b border-slate-200">
-              <h3 className="text-sm font-semibold text-slate-600">
+            <div className="px-5 py-3 bg-slate-50/80 border-b border-slate-100">
+              <h3 className="text-sm font-bold text-slate-600">
                 {group.category}
-                <span className="ml-2 text-xs text-slate-400 font-normal">
+                <span className="ml-2 text-[11px] text-slate-300 font-normal">
                   {group.items.filter((i) => i.is_done).length}/{group.items.length}
                 </span>
               </h3>
@@ -138,28 +142,28 @@ export default function ChecklistPage() {
               {group.items.map((item) => (
                 <li
                   key={item.id}
-                  className="flex items-center gap-3 px-5 py-3 border-b border-slate-100 last:border-b-0 group hover:bg-slate-50 transition-colors"
+                  className="flex items-center gap-3 px-5 py-3.5 border-b border-slate-50 last:border-b-0 group hover:bg-slate-50/50 transition-colors"
                 >
                   <button
                     onClick={() => toggle(item)}
-                    className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                    className={`flex-shrink-0 w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${
                       item.is_done
-                        ? "bg-blue-600 border-blue-600"
-                        : "border-slate-300 hover:border-blue-400"
+                        ? "bg-gradient-to-r from-indigo-500 to-blue-500 border-transparent"
+                        : "border-slate-200 hover:border-indigo-300"
                     }`}
                   >
-                    {item.is_done ? <Check size={14} className="text-white" /> : null}
+                    {item.is_done ? <Check size={12} className="text-white" /> : null}
                   </button>
                   <span
                     className={`flex-1 text-sm ${
-                      item.is_done ? "line-through text-slate-400" : "text-slate-700"
+                      item.is_done ? "line-through text-slate-300" : "text-slate-700"
                     }`}
                   >
                     {item.text}
                   </span>
                   <button
                     onClick={() => remove(item.id)}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-500 transition-all"
+                    className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all"
                   >
                     <Trash2 size={14} />
                   </button>

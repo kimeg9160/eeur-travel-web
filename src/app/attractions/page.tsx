@@ -75,9 +75,9 @@ const ATTRACTIONS: Attraction[] = [
 ];
 
 const RESERVATION_STYLE = {
-  "필수": "bg-red-100 text-red-700",
-  "권장": "bg-amber-100 text-amber-700",
-  "불필요": "bg-green-100 text-green-700",
+  "필수": "bg-red-50 text-red-600",
+  "권장": "bg-amber-50 text-amber-600",
+  "불필요": "bg-emerald-50 text-emerald-600",
 };
 
 function formatDate(dateStr: string) {
@@ -96,53 +96,56 @@ export default function AttractionsPage() {
   }, {});
 
   return (
-    <div>
-      <h1 className="text-lg md:text-2xl font-bold text-slate-800 mb-1 md:mb-2">관광지 예약</h1>
-      <p className="text-xs md:text-sm text-slate-500 mb-4 md:mb-6">
-        {items.length}곳 · 예약 완료 {items.filter((i) => i.isBooked).length}/{items.length}
-      </p>
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-xl md:text-2xl font-bold text-slate-800">관광지 예약</h1>
+        <p className="text-xs md:text-sm text-slate-400 mt-1">
+          {items.length}곳 · 예약 완료 {items.filter((i) => i.isBooked).length}/{items.length}
+        </p>
+      </div>
 
       {Object.entries(byDate)
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([date, dateItems]) => (
-          <div key={date} className="mb-4 md:mb-6">
-            <h2 className="text-sm md:text-base font-semibold text-slate-600 mb-2">
-              {dateItems[0].cityFlag} {dateItems[0].city} · {formatDate(date)}
+          <div key={date}>
+            <h2 className="text-sm md:text-base font-bold text-slate-600 mb-3 flex items-center gap-2">
+              <span className="text-lg">{dateItems[0].cityFlag}</span>
+              {dateItems[0].city} · {formatDate(date)}
             </h2>
-            <div className="space-y-3 md:space-y-4">
+            <div className="space-y-3">
               {dateItems.map((item) => (
                 <div
                   key={item.id}
-                  className="bg-white rounded-xl border border-slate-200 overflow-hidden"
+                  className="card overflow-hidden"
                 >
-                  <div className="px-4 py-3">
+                  <div className="p-5">
                     {/* Header */}
-                    <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="min-w-0">
                         <h3 className="font-bold text-slate-800 text-sm md:text-base">{item.name}</h3>
-                        <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <span className={`text-[10px] md:text-xs px-2 py-0.5 rounded-full font-medium ${RESERVATION_STYLE[item.reservationRequired]}`}>
+                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                          <span className={`text-[10px] md:text-xs px-2.5 py-0.5 rounded-full font-semibold ${RESERVATION_STYLE[item.reservationRequired]}`}>
                             예약 {item.reservationRequired}
                           </span>
                           {item.timeSlot !== "자유" && (
-                            <span className="text-[10px] md:text-xs text-slate-400">{item.timeSlot}</span>
+                            <span className="text-[10px] md:text-xs text-slate-300">{item.timeSlot}</span>
                           )}
                         </div>
                       </div>
-                      <span className={`text-[10px] md:text-xs font-semibold flex-shrink-0 ${item.isBooked ? "text-green-600" : "text-amber-500"}`}>
+                      <span className={`text-[10px] md:text-xs font-semibold flex-shrink-0 ${item.isBooked ? "text-emerald-500" : "text-amber-500"}`}>
                         {item.isBooked ? "✅ 완료" : "🏷️ 현장구매"}
                       </span>
                     </div>
 
                     {/* Ticket options */}
-                    <div className="bg-slate-50 rounded-lg p-2.5 md:p-3 mb-3">
+                    <div className="bg-slate-50 rounded-xl p-3 md:p-4 mb-4">
                       <table className="w-full text-[11px] md:text-xs">
                         <tbody>
                           {item.tickets.map((ticket, idx) => (
-                            <tr key={idx} className={idx > 0 ? "border-t border-slate-200" : ""}>
-                              <td className="py-1 pr-2 font-medium text-slate-700 whitespace-nowrap">{ticket.name}</td>
-                              <td className="py-1 pr-2 font-bold text-blue-600 whitespace-nowrap">{ticket.price}</td>
-                              <td className="py-1 text-slate-400">{ticket.desc}</td>
+                            <tr key={idx} className={idx > 0 ? "border-t border-slate-100" : ""}>
+                              <td className="py-1.5 pr-3 font-semibold text-slate-700 whitespace-nowrap">{ticket.name}</td>
+                              <td className="py-1.5 pr-3 font-bold text-indigo-600 whitespace-nowrap">{ticket.price}</td>
+                              <td className="py-1.5 text-slate-400">{ticket.desc}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -151,7 +154,7 @@ export default function AttractionsPage() {
 
                     {/* Note */}
                     {item.note && (
-                      <p className="text-[10px] md:text-xs text-slate-400 mb-3">{item.note}</p>
+                      <p className="text-[10px] md:text-xs text-slate-400 mb-4 leading-relaxed">{item.note}</p>
                     )}
 
                     {/* Buttons */}
@@ -160,9 +163,9 @@ export default function AttractionsPage() {
                         href={item.bookingUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-1.5 flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs md:text-sm font-medium rounded-lg transition-colors"
+                        className="flex items-center justify-center gap-2 flex-1 py-2.5 bg-gradient-to-r from-indigo-500 to-blue-500 hover:shadow-lg hover:shadow-indigo-500/20 text-white text-xs md:text-sm font-semibold rounded-xl transition-all"
                       >
-                        <svg className="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
                         예약하기
@@ -171,9 +174,9 @@ export default function AttractionsPage() {
                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.name)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs md:text-sm font-medium rounded-lg transition-colors"
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white shadow-sm hover:shadow-md text-slate-500 text-xs md:text-sm font-medium rounded-xl transition-all"
                       >
-                        <svg className="w-3.5 h-3.5 md:w-4 md:h-4" viewBox="0 0 24 24" fill="currentColor">
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                         </svg>
                         지도

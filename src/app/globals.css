@@ -3,13 +3,44 @@
 @tailwind utilities;
 
 :root {
-  --background: #f8fafc;
+  --background: #f0f2f5;
   --foreground: #0f172a;
+  --card: #ffffff;
+  --card-hover: #fafbfc;
+  --accent: #4f6ef7;
+  --accent-light: #eef2ff;
+  --border: rgba(0, 0, 0, 0.06);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
+  font-feature-settings: "ss01", "cv01";
+}
+
+/* Modern scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.12); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.2); }
+
+/* Card base */
+.card {
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+.card-interactive:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 /* Leaflet map fix for Next.js */
@@ -17,4 +48,18 @@ body {
   width: 100%;
   height: 100%;
   z-index: 0;
+}
+
+/* Smooth transitions */
+* { transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* Badge styles */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }

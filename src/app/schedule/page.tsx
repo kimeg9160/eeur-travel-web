@@ -417,7 +417,7 @@ function EditModal({
           <div className="flex gap-2">
             <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">취소</button>
             <button onClick={handleSave} disabled={!spotName.trim() || saving}
-              className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">
+              className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:shadow-lg hover:shadow-indigo-500/20 transition-colors disabled:opacity-50">
               {saving ? "저장 중..." : "저장"}
             </button>
           </div>
@@ -548,7 +548,7 @@ function TransferEditModal({
           <div className="flex gap-2">
             <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">취소</button>
             <button onClick={handleSave} disabled={saving}
-              className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">
+              className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:shadow-lg hover:shadow-indigo-500/20 transition-colors disabled:opacity-50">
               {saving ? "저장 중..." : "저장"}
             </button>
           </div>
@@ -653,7 +653,7 @@ function AddModal({
         <div className="flex justify-end gap-2 px-5 py-4 border-t border-slate-200">
           <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">취소</button>
           <button onClick={handleSave} disabled={!spotName.trim() || saving}
-            className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">
+            className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:shadow-lg hover:shadow-indigo-500/20 transition-colors disabled:opacity-50">
             {saving ? "저장 중..." : "추가"}
           </button>
         </div>
@@ -739,7 +739,7 @@ function ImportListModal({
           </div>
           {!results && (
             <button onClick={handleExtract} disabled={!url.trim() || loading}
-              className="w-full px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">
+              className="w-full px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:shadow-lg hover:shadow-indigo-500/20 transition-colors disabled:opacity-50">
               {loading ? "추출 중... (1~2분 소요)" : "장소 추출"}
             </button>
           )}
@@ -763,7 +763,7 @@ function ImportListModal({
           <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">닫기</button>
           {results && results.length > 0 && (
             <button onClick={handleSave} disabled={saving}
-              className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">
+              className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:shadow-lg hover:shadow-indigo-500/20 transition-colors disabled:opacity-50">
               {saving ? "저장 중..." : `${results.length}건 미분류로 저장`}
             </button>
           )}
@@ -1063,7 +1063,7 @@ export default function SchedulePage() {
             📋 리스트
           </button>
           <button onClick={() => setAddModalOpen(true)}
-            className="px-2.5 py-1.5 text-[11px] md:text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            className="px-2.5 py-1.5 text-[11px] md:text-xs bg-gradient-to-r from-indigo-500 to-blue-500 text-white rounded-lg hover:shadow-lg hover:shadow-indigo-500/20 transition-colors">
             + 추가
           </button>
         </div>
@@ -1076,7 +1076,7 @@ export default function SchedulePage() {
             onClick={() => { setSelectedDate(d.date); setSelectedRegion(null); setHighlightedItemId(null); setMobileMapOpen(false); }}
             className={`px-2 md:px-3 py-1.5 md:py-2 rounded-lg text-[11px] md:text-sm font-medium whitespace-nowrap transition-colors ${
               selectedDate === d.date && !isRegionMode
-                ? "bg-blue-600 text-white"
+                ? "bg-gradient-to-r from-indigo-500 to-blue-500 text-white"
                 : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
             }`}>
             {d.label}

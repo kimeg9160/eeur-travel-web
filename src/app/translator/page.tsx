@@ -17,7 +17,6 @@ const LANG_LABELS: Record<string, string> = {
   hu: "🇭🇺 Magyar",
 };
 
-// Web Speech API 언어 코드 매핑
 const SPEECH_LANG_MAP: Record<string, string> = {
   korean: "ko-KR",
   english: "en-US",
@@ -77,7 +76,7 @@ export default function TranslatorPage() {
   };
 
   const getSpeechLang = (): string => {
-    if (inputLang === "auto") return "ko-KR"; // 기본값
+    if (inputLang === "auto") return "ko-KR";
     return SPEECH_LANG_MAP[inputLang] || "ko-KR";
   };
 
@@ -119,7 +118,6 @@ export default function TranslatorPage() {
     recognitionRef.current?.stop();
     setIsRecording(false);
 
-    // 음성 인식 종료 후 자동 번역
     setTimeout(async () => {
       const text = document.querySelector<HTMLTextAreaElement>("textarea")?.value;
       if (text?.trim()) {
@@ -157,19 +155,19 @@ export default function TranslatorPage() {
   };
 
   return (
-    <div className="max-w-lg mx-auto">
-      <h1 className="text-xl md:text-2xl font-bold text-slate-800 mb-4">
+    <div className="max-w-lg mx-auto space-y-4">
+      <h1 className="text-xl md:text-2xl font-bold text-slate-800">
         번역기
       </h1>
 
       {/* 설정 영역 */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs text-slate-500 mb-1">입력 언어</label>
+          <label className="block text-[10px] md:text-xs text-slate-400 font-medium mb-1.5">입력 언어</label>
           <select
             value={inputLang}
             onChange={(e) => setInputLang(e.target.value)}
-            className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-blue-500"
+            className="w-full bg-white rounded-xl px-3 py-2.5 text-sm shadow-sm border-0 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
           >
             <option value="auto">자동 감지</option>
             <option value="korean">🇰🇷 한국어</option>
@@ -180,11 +178,11 @@ export default function TranslatorPage() {
           </select>
         </div>
         <div>
-          <label className="block text-xs text-slate-500 mb-1">대상 국가</label>
+          <label className="block text-[10px] md:text-xs text-slate-400 font-medium mb-1.5">대상 국가</label>
           <select
             value={targetCountry}
             onChange={(e) => setTargetCountry(e.target.value)}
-            className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-blue-500"
+            className="w-full bg-white rounded-xl px-3 py-2.5 text-sm shadow-sm border-0 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
           >
             <option value="austria">🇦🇹 오스트리아</option>
             <option value="czech">🇨🇿 체코</option>
@@ -194,7 +192,7 @@ export default function TranslatorPage() {
       </div>
 
       {/* 입력 영역 */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4">
+      <div className="card p-4">
         <textarea
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
@@ -208,16 +206,16 @@ export default function TranslatorPage() {
           rows={3}
           className="w-full resize-none focus:outline-none text-sm leading-relaxed"
         />
-        <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
           <div className="flex gap-2">
             {speechSupported && (
               <button
                 onClick={isRecording ? stopRecording : startRecording}
                 disabled={isLoading}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
                   isRecording
-                    ? "bg-red-100 text-red-700 animate-pulse"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    ? "bg-red-50 text-red-600 animate-pulse"
+                    : "bg-slate-50 text-slate-500 hover:bg-slate-100"
                 } disabled:opacity-50`}
               >
                 {isRecording ? <MicOff size={16} /> : <Mic size={16} />}
@@ -228,7 +226,7 @@ export default function TranslatorPage() {
           <button
             onClick={handleTextSubmit}
             disabled={isLoading || !inputText.trim()}
-            className="flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-1.5 bg-gradient-to-r from-indigo-500 to-blue-500 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:shadow-lg hover:shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             <Send size={14} />
             번역
@@ -239,14 +237,14 @@ export default function TranslatorPage() {
       {/* 로딩 */}
       {isLoading && (
         <div className="flex items-center justify-center gap-2 text-slate-400 py-6">
-          <div className="w-4 h-4 border-2 border-slate-300 border-t-blue-500 rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-slate-200 border-t-indigo-500 rounded-full animate-spin" />
           번역 중...
         </div>
       )}
 
       {/* 에러 */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4 text-red-600 text-sm">
+        <div className="bg-red-50 rounded-xl px-4 py-3 text-red-500 text-sm">
           {error}
         </div>
       )}
@@ -255,34 +253,34 @@ export default function TranslatorPage() {
       {results.length > 0 && (
         <div className="space-y-3">
           {detectedLangName && (
-            <p className="text-xs text-slate-400 text-center">
-              감지된 언어: <span className="text-slate-600 font-medium">{detectedLangName}</span>
+            <p className="text-xs text-slate-300 text-center">
+              감지된 언어: <span className="text-slate-500 font-medium">{detectedLangName}</span>
             </p>
           )}
           {results.map((r) => (
             <div
               key={r.lang}
-              className="bg-white rounded-xl border border-slate-200 p-4"
+              className="card p-4"
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-slate-500">
+                <span className="text-xs font-semibold text-slate-400">
                   {LANG_LABELS[r.lang] || r.langName}
                 </span>
-                <div className="flex gap-1">
+                <div className="flex gap-0.5">
                   <button
                     onClick={() => handleSpeak(r.text, r.lang)}
-                    className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                    className="p-2 rounded-lg hover:bg-slate-50 text-slate-300 hover:text-indigo-500 transition-all"
                     title="읽기"
                   >
                     <Volume2 size={14} />
                   </button>
                   <button
                     onClick={() => handleCopy(r.lang, r.text)}
-                    className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                    className="p-2 rounded-lg hover:bg-slate-50 text-slate-300 hover:text-indigo-500 transition-all"
                     title="복사"
                   >
                     {copiedLang === r.lang ? (
-                      <Check size={14} className="text-green-500" />
+                      <Check size={14} className="text-emerald-500" />
                     ) : (
                       <Copy size={14} />
                     )}
@@ -299,10 +297,10 @@ export default function TranslatorPage() {
 
       {/* 안내 */}
       {!isLoading && results.length === 0 && !error && (
-        <div className="text-center py-8 text-slate-300">
-          <p className="text-3xl mb-2">🌍</p>
-          <p className="text-sm">한국어 · English · Deutsch · Čeština · Magyar</p>
-          <p className="text-xs mt-1">음성 또는 텍스트로 입력하세요</p>
+        <div className="text-center py-12 text-slate-300">
+          <p className="text-4xl mb-3">🌍</p>
+          <p className="text-sm font-medium">한국어 · English · Deutsch · Čeština · Magyar</p>
+          <p className="text-xs mt-1.5">음성 또는 텍스트로 입력하세요</p>
         </div>
       )}
     </div>

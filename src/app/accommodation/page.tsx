@@ -60,7 +60,11 @@ export default function AccommodationPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  if (!trip) return <div className="text-slate-400 p-4 md:p-8">로딩 중...</div>;
+  if (!trip) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-500 rounded-full animate-spin" />
+    </div>
+  );
 
   const citiesWithNights = cities.filter((c) => (c.nights ?? 0) > 0);
   const cityById = Object.fromEntries(cities.map((c) => [c.id, c]));
@@ -74,18 +78,24 @@ export default function AccommodationPage() {
   }, 0);
 
   return (
-    <div>
-      <h1 className="text-lg md:text-2xl font-bold text-slate-800 mb-1 md:mb-2">확정 숙소</h1>
-      <p className="text-xs md:text-sm text-slate-500 mb-3 md:mb-4">
-        {accs.length}곳 · {accs.reduce((s, a) => s + (a.nights || 0), 0)}박 · 총 ₩{totalKrw.toLocaleString()}
-        {totalTax > 0 && <span className="text-amber-600"> + 현지세금 ₩{totalTax.toLocaleString()}</span>}
-      </p>
+    <div className="space-y-4">
+      <div>
+        <h1 className="text-xl md:text-2xl font-bold text-slate-800">확정 숙소</h1>
+        <p className="text-xs md:text-sm text-slate-400 mt-1">
+          {accs.length}곳 · {accs.reduce((s, a) => s + (a.nights || 0), 0)}박 · 총 ₩{totalKrw.toLocaleString()}
+          {totalTax > 0 && <span className="text-amber-500"> + 현지세금 ₩{totalTax.toLocaleString()}</span>}
+        </p>
+      </div>
 
       {/* City filter */}
-      <div className="flex gap-1.5 md:gap-2 mb-4 md:mb-6 overflow-x-auto pb-2">
+      <div className="flex gap-2 overflow-x-auto pb-1">
         <button
           onClick={() => setSelectedCity(null)}
-          className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium flex-shrink-0 ${!selectedCity ? "bg-blue-600 text-white" : "bg-white text-slate-600 border border-slate-200"}`}
+          className={`px-4 py-2 rounded-xl text-xs md:text-sm font-medium flex-shrink-0 transition-all ${
+            !selectedCity
+              ? "bg-gradient-to-r from-indigo-500 to-blue-500 text-white shadow-md shadow-indigo-500/20"
+              : "bg-white text-slate-500 shadow-sm hover:shadow-md"
+          }`}
         >
           전체
         </button>
@@ -93,7 +103,11 @@ export default function AccommodationPage() {
           <button
             key={c.id}
             onClick={() => setSelectedCity(c.id)}
-            className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium flex-shrink-0 ${selectedCity === c.id ? "bg-blue-600 text-white" : "bg-white text-slate-600 border border-slate-200"}`}
+            className={`px-4 py-2 rounded-xl text-xs md:text-sm font-medium flex-shrink-0 transition-all ${
+              selectedCity === c.id
+                ? "bg-gradient-to-r from-indigo-500 to-blue-500 text-white shadow-md shadow-indigo-500/20"
+                : "bg-white text-slate-500 shadow-sm hover:shadow-md"
+            }`}
           >
             <span className="md:hidden">{c.country_flag} {c.short_code || c.name}</span>
             <span className="hidden md:inline">{c.country_flag} {c.name}</span>
@@ -102,7 +116,7 @@ export default function AccommodationPage() {
       </div>
 
       {/* Accommodation cards */}
-      <div className="space-y-4 md:space-y-5">
+      <div className="space-y-4">
         {filtered.map((acc) => {
           const city = cityById[acc.city_id ?? 0];
           const info = parseNote(acc.note);
@@ -111,22 +125,22 @@ export default function AccommodationPage() {
           const checkoutTime = acc.checkout_time || "11:00";
 
           return (
-            <div key={acc.id} className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div key={acc.id} className="card overflow-hidden">
               {/* Header */}
-              <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
+              <div className="bg-gradient-to-r from-slate-50 to-white px-5 py-4 border-b border-slate-100/80">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-base md:text-lg">{city?.country_flag}</span>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-xl md:text-2xl">{city?.country_flag}</span>
                     <div className="min-w-0">
                       <h3 className="font-bold text-slate-800 text-sm md:text-base leading-tight">{acc.name}</h3>
-                      <p className="text-[11px] md:text-xs text-slate-500 mt-0.5">
+                      <p className="text-[11px] md:text-xs text-slate-400 mt-0.5">
                         {city?.name} · {acc.nights}박
                         {acc.breakfast_included ? " · 조식포함" : ""}
                       </p>
                     </div>
                   </div>
-                  <span className={`text-[10px] md:text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ml-2 ${
-                    acc.source === "NOL" ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
+                  <span className={`text-[10px] md:text-xs px-3 py-1 rounded-full font-semibold flex-shrink-0 ml-2 ${
+                    acc.source === "NOL" ? "bg-emerald-50 text-emerald-600" : "bg-orange-50 text-orange-500"
                   }`}>
                     {acc.source || ""}
                   </span>
@@ -134,59 +148,61 @@ export default function AccommodationPage() {
               </div>
 
               {/* Body */}
-              <div className="px-4 py-3">
+              <div className="px-5 py-4 space-y-4">
                 {/* Check-in / Check-out */}
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  <div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-blue-50/50 rounded-xl p-3">
                     <p className="text-[10px] md:text-xs text-slate-400 mb-0.5">체크인</p>
-                    <p className="text-sm md:text-base font-semibold text-slate-800">
+                    <p className="text-sm md:text-base font-bold text-slate-800">
                       {formatDate(acc.checkin_date)}
                     </p>
-                    <p className="text-xs md:text-sm text-blue-600 font-medium">{checkinTime} 이후</p>
+                    <p className="text-xs md:text-sm text-blue-500 font-semibold">{checkinTime} 이후</p>
                   </div>
-                  <div>
+                  <div className="bg-rose-50/50 rounded-xl p-3">
                     <p className="text-[10px] md:text-xs text-slate-400 mb-0.5">체크아웃</p>
-                    <p className="text-sm md:text-base font-semibold text-slate-800">
+                    <p className="text-sm md:text-base font-bold text-slate-800">
                       {formatDate(acc.checkout_date)}
                     </p>
-                    <p className="text-xs md:text-sm text-red-500 font-medium">{checkoutTime} 이전</p>
+                    <p className="text-xs md:text-sm text-rose-500 font-semibold">{checkoutTime} 이전</p>
                   </div>
                 </div>
 
                 {/* Booking numbers */}
-                <div className="bg-slate-50 rounded-lg p-2.5 md:p-3 mb-3 space-y-1.5">
-                  {info["예약번호"] && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-[10px] md:text-xs text-slate-500">예약번호</span>
-                      <span className="text-xs md:text-sm font-mono font-medium text-slate-800">{info["예약번호"]}</span>
-                    </div>
-                  )}
-                  {info["체크인번호"] && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-[10px] md:text-xs text-slate-500">체크인번호</span>
-                      <span className="text-xs md:text-sm font-mono font-medium text-slate-800">{info["체크인번호"]}</span>
-                    </div>
-                  )}
-                </div>
+                {(info["예약번호"] || info["체크인번호"]) && (
+                  <div className="bg-slate-50 rounded-xl p-3 space-y-2">
+                    {info["예약번호"] && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] md:text-xs text-slate-400">예약번호</span>
+                        <span className="text-xs md:text-sm font-mono font-semibold text-slate-700">{info["예약번호"]}</span>
+                      </div>
+                    )}
+                    {info["체크인번호"] && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] md:text-xs text-slate-400">체크인번호</span>
+                        <span className="text-xs md:text-sm font-mono font-semibold text-slate-700">{info["체크인번호"]}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Price */}
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between">
                   <div>
                     <span className="text-[10px] md:text-xs text-slate-400">결제금액</span>
-                    <p className="text-lg md:text-xl font-bold text-slate-800">₩{(acc.total_price_krw || 0).toLocaleString()}</p>
+                    <p className="text-xl md:text-2xl font-bold text-slate-800">₩{(acc.total_price_krw || 0).toLocaleString()}</p>
                   </div>
                   {tax > 0 && (
                     <div className="text-right">
                       <span className="text-[10px] md:text-xs text-slate-400">현지세금</span>
-                      <p className="text-sm md:text-base font-semibold text-amber-600">+ ₩{tax.toLocaleString()}</p>
+                      <p className="text-sm md:text-base font-bold text-amber-500">+ ₩{tax.toLocaleString()}</p>
                     </div>
                   )}
                 </div>
 
                 {/* Cancellation */}
                 {acc.cancellation_policy && (
-                  <p className="text-[10px] md:text-xs text-slate-500 mb-3">
-                    <span className="text-slate-400">취소: </span>{acc.cancellation_policy}
+                  <p className="text-[10px] md:text-xs text-slate-400">
+                    <span className="text-slate-300">취소: </span>{acc.cancellation_policy}
                   </p>
                 )}
 
@@ -194,12 +210,12 @@ export default function AccommodationPage() {
                 {(() => {
                   const pdfUrl = getPdfUrl(info);
                   return pdfUrl ? (
-                    <div className="flex gap-2 mb-3">
+                    <div className="flex gap-2">
                       <a
                         href={pdfUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="hidden md:flex items-center justify-center gap-1.5 flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg transition-colors"
+                        className="hidden md:flex items-center justify-center gap-2 flex-1 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 text-sm font-medium rounded-xl transition-colors"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -210,9 +226,9 @@ export default function AccommodationPage() {
                       <a
                         href={pdfUrl}
                         download
-                        className="flex items-center justify-center gap-1.5 flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs md:text-sm font-medium rounded-lg transition-colors"
+                        className="flex items-center justify-center gap-2 flex-1 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs md:text-sm font-medium rounded-xl transition-colors"
                       >
-                        <svg className="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                         </svg>
                         예약확인서 다운로드
@@ -223,13 +239,13 @@ export default function AccommodationPage() {
 
                 {/* Address + Google Maps button */}
                 {acc.address && (
-                  <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
-                    <p className="text-[10px] md:text-xs text-slate-500 flex-1 min-w-0">{acc.address}</p>
+                  <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
+                    <p className="text-[10px] md:text-xs text-slate-400 flex-1 min-w-0">{acc.address}</p>
                     <a
                       href={acc.booking_url || googleMapsUrl(acc.address)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-shrink-0 bg-blue-600 text-white text-[10px] md:text-xs px-3 py-1.5 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                      className="flex-shrink-0 bg-gradient-to-r from-indigo-500 to-blue-500 text-white text-[10px] md:text-xs px-4 py-2 rounded-xl font-semibold hover:shadow-md hover:shadow-indigo-500/20 transition-all"
                     >
                       Google Maps
                     </a>
