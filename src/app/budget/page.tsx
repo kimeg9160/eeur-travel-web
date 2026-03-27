@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import type { Trip, BudgetItem, Accommodation, Transfer } from "@/lib/types";
+import type { Trip, BudgetItem, Accommodation, Transfer, ItineraryItem } from "@/lib/types";
 
 const CAT_EMOJI: Record<string, string> = {
   "항공": "✈️", "숙소": "🏨", "교통": "🚆", "식비": "🍽️",
@@ -29,18 +29,21 @@ export default function BudgetPage() {
   const [items, setItems] = useState<BudgetItem[]>([]);
   const [accs, setAccs] = useState<Accommodation[]>([]);
   const [transfers, setTransfers] = useState<Transfer[]>([]);
+  const [itinerary, setItinerary] = useState<ItineraryItem[]>([]);
 
   const load = useCallback(async () => {
-    const [t, b, a, tr] = await Promise.all([
+    const [t, b, a, tr, it] = await Promise.all([
       supabase.from("trips").select("*").eq("id", 1).single(),
       supabase.from("budget").select("*").eq("trip_id", 1).order("category"),
       supabase.from("accommodations").select("*").eq("trip_id", 1).eq("is_booked", 1),
       supabase.from("transfers").select("*").eq("trip_id", 1),
+      supabase.from("itinerary").select("*").eq("trip_id", 1),
     ]);
     if (t.data) setTrip(t.data);
     if (b.data) setItems(b.data);
     if (a.data) setAccs(a.data);
     if (tr.data) setTransfers(tr.data);
+    if (it.data) setItinerary(it.data);
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -88,10 +91,21 @@ export default function BudgetPage() {
   const landActualEur = transfers.filter(t => t.transport_type !== "비행기").reduce((s, t) => s + (t.cost_eur || 0), 0);
   const transferActualKrw = flightActualKrw + landActualKrw;
 
+  // 일정탭 식당+카페 → 식비, 쇼핑 → 쇼핑, 관광지 → 기타(입장료)
+  const foodKrw = itinerary.filter(i => i.category === "식당" || i.category === "카페").reduce((s, i) => s + (i.cost_krw || 0), 0);
+  const foodEur = itinerary.filter(i => i.category === "식당" || i.category === "카페").reduce((s, i) => s + (i.cost_eur || 0), 0);
+  const shopKrw = itinerary.filter(i => i.category === "쇼핑").reduce((s, i) => s + (i.cost_krw || 0), 0);
+  const shopEur = itinerary.filter(i => i.category === "쇼핑").reduce((s, i) => s + (i.cost_eur || 0), 0);
+  const sightKrw = itinerary.filter(i => i.category === "관광지").reduce((s, i) => s + (i.cost_krw || 0), 0);
+  const sightEur = itinerary.filter(i => i.category === "관광지").reduce((s, i) => s + (i.cost_eur || 0), 0);
+
   const syncMap: Record<string, { krw: number; eur: number }> = {
     "항공": { krw: flightActualKrw, eur: flightActualEur },
     "숙소": { krw: accActualKrw, eur: accActualEur },
     "교통": { krw: landActualKrw, eur: landActualEur },
+    "식비": { krw: foodKrw, eur: foodEur },
+    "쇼핑": { krw: shopKrw, eur: shopEur },
+    "입장료": { krw: sightKrw, eur: sightEur },
   };
   const catCount: Record<string, number> = {};
   items.forEach((item) => { catCount[item.category] = (catCount[item.category] || 0) + 1; });
@@ -133,14 +147,20 @@ export default function BudgetPage() {
           <h3 className="text-sm font-bold text-slate-700 mb-4">실제 지출 현황</h3>
           <div className="flex items-center justify-center" style={{ height: 240 }}>
             {(() => {
+              const confirmedFood = foodKrw;
+              const confirmedShop = shopKrw;
+              const confirmedSight = sightKrw;
               const segments = [
                 { label: "항공", value: transfers.filter(t => t.transport_type === "비행기").reduce((s, t) => s + (t.cost_krw || 0), 0), color: CAT_COLORS["항공"] },
                 { label: "숙소", value: accActualKrw, color: CAT_COLORS["숙소"] },
                 { label: "교통", value: transfers.filter(t => t.transport_type !== "비행기").reduce((s, t) => s + (t.cost_krw || 0), 0), color: CAT_COLORS["교통"] },
-                { label: "기타 예상", value: Math.max(0, totalKrw - accActualKrw - transferActualKrw), color: "#e2e8f0" },
+                { label: "식비", value: confirmedFood, color: CAT_COLORS["식비"] },
+                { label: "쇼핑", value: confirmedShop, color: CAT_COLORS["쇼핑"] },
+                { label: "입장료", value: confirmedSight, color: CAT_COLORS["입장료"] },
+                { label: "기타 예상", value: Math.max(0, totalKrw - accActualKrw - transferActualKrw - confirmedFood - confirmedShop - confirmedSight), color: "#e2e8f0" },
               ].filter(s => s.value > 0);
               const total = segments.reduce((s, seg) => s + seg.value, 0);
-              const confirmedTotal = accActualKrw + transferActualKrw;
+              const confirmedTotal = accActualKrw + transferActualKrw + confirmedFood + confirmedShop + confirmedSight;
               const size = 200, cx = size / 2, cy = size / 2, r = 75, stroke = 30;
               let cumAngle = -90;
               const arcs = segments.map((seg) => {
